@@ -13,6 +13,39 @@ from app.services.supabase_service import is_supabase_configured, supabase_sign_
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+def build_user_response(user: User) -> UserResponse:
+    dept_id = None
+    dept_code = None
+    dept_name = None
+    officer_id = None
+    zone = None
+    designation = None
+
+    if user and user.officer_profile:
+        officer_id = user.officer_profile.id
+        zone = user.officer_profile.zone
+        designation = user.officer_profile.designation
+        if user.officer_profile.department:
+            dept_id = user.officer_profile.department.id
+            dept_code = user.officer_profile.department.code
+            dept_name = user.officer_profile.department.name
+
+    return UserResponse(
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        phone=user.phone,
+        role=user.role,
+        is_active=user.is_active,
+        created_at=user.created_at,
+        department_id=dept_id,
+        department_code=dept_code,
+        department_name=dept_name,
+        officer_id=officer_id,
+        zone=zone,
+        designation=designation
+    )
+
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register_user(payload: UserRegister, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == payload.email).first()
@@ -60,8 +93,6 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)):
     db.flush()
 
     # If officer registration request, create pending officer profile
-    dept_code = None
-    officer_id = None
     if is_officer_request:
         dept = None
         if payload.department_code:
@@ -80,8 +111,6 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)):
             )
             db.add(officer)
             db.flush()
-            officer_id = officer.id
-            dept_code = dept.code
 
     db.commit()
     db.refresh(user)
@@ -92,19 +121,7 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)):
     elif not user.is_active:
         access_token = "PENDING_ADMIN_APPROVAL"
 
-    user_resp = UserResponse(
-        id=user.id,
-        name=user.name,
-        email=user.email,
-        phone=user.phone,
-        role=user.role,
-        is_active=user.is_active,
-        created_at=user.created_at,
-        department_code=dept_code,
-        officer_id=officer_id
-    )
-
-    return TokenResponse(access_token=access_token, token_type="bearer", user=user_resp)
+    return TokenResponse(access_token=access_token, token_type="bearer", user=build_user_response(user))
 
 @router.post("/login", response_model=TokenResponse)
 def login_user(payload: UserLogin, db: Session = Depends(get_db)):
@@ -156,50 +173,11 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
             detail="Account is inactive. Please contact NagarSaathi Administrator."
         )
 
-    dept_code = None
-    officer_id = None
-    if user and user.officer_profile:
-        officer_id = user.officer_profile.id
-        if user.officer_profile.department:
-            dept_code = user.officer_profile.department.code
-
-    if not access_token:
-        access_token = create_access_token(subject=user.id, role=user.role)
-
-    user_resp = UserResponse(
-        id=user.id,
-        name=user.name,
-        email=user.email,
-        phone=user.phone,
-        role=user.role,
-        is_active=user.is_active,
-        created_at=user.created_at,
-        department_code=dept_code,
-        officer_id=officer_id
-    )
-
-    return TokenResponse(access_token=access_token, token_type="bearer", user=user_resp)
+    return TokenResponse(access_token=access_token, token_type="bearer", user=build_user_response(user))
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user_profile(current_user: User = Depends(get_current_user)):
-    dept_code = None
-    officer_id = None
-    if current_user.officer_profile:
-        officer_id = current_user.officer_profile.id
-        if current_user.officer_profile.department:
-            dept_code = current_user.officer_profile.department.code
-
-    return UserResponse(
-        id=current_user.id,
-        name=current_user.name,
-        email=current_user.email,
-        phone=current_user.phone,
-        role=current_user.role,
-        is_active=current_user.is_active,
-        created_at=current_user.created_at,
-        department_code=dept_code,
-        officer_id=officer_id
-    )
+    return build_user_response(current_user)
 
 # ================= ADMIN OFFICER APPROVAL WORKFLOW =================
 

@@ -21,6 +21,19 @@ from app.websocket.manager import ws_manager
 
 router = APIRouter(prefix="/officer", tags=["Officer Operations"])
 
+def verify_officer_department_access(complaint: Complaint, current_user: User, officer: Optional[Officer]):
+    if current_user.role != "ADMIN" and current_user.role != "COMMAND_CENTER":
+        if not officer:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access forbidden: No officer profile associated with your user account."
+            )
+        if complaint.department_id and officer.department_id != complaint.department_id and complaint.officer_id != officer.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access forbidden: This grievance belongs to a different municipal department."
+            )
+
 @router.get("/complaints", response_model=List[ComplaintResponse])
 def get_officer_complaints(
     status_filter: Optional[str] = None,
@@ -31,8 +44,11 @@ def get_officer_complaints(
     query = db.query(Complaint)
     
     # If officer is tied to a department, filter to department's complaints
-    if officer and officer.department_id:
-        query = query.filter(Complaint.department_id == officer.department_id)
+    if current_user.role != "ADMIN" and current_user.role != "COMMAND_CENTER":
+        if officer and officer.department_id:
+            query = query.filter(Complaint.department_id == officer.department_id)
+        else:
+            return []
         
     if status_filter:
         query = query.filter(Complaint.status == status_filter)
@@ -46,6 +62,7 @@ def get_officer_complaint_detail(
     auth_data: tuple[User, Optional[Officer]] = Depends(require_officer),
     db: Session = Depends(get_db)
 ):
+    current_user, officer = auth_data
     query = db.query(Complaint)
     if complaint_id.isdigit():
         complaint = query.filter((Complaint.id == int(complaint_id)) | (Complaint.public_id == complaint_id)).first()
@@ -54,6 +71,8 @@ def get_officer_complaint_detail(
 
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    verify_officer_department_access(complaint, current_user, officer)
 
     return format_complaint_detail(complaint)
 
@@ -73,6 +92,8 @@ async def assign_complaint(
 
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    verify_officer_department_access(complaint, current_user, officer)
 
     target_officer_id = payload.officer_id if (payload and payload.officer_id) else (officer.id if officer else None)
     prev_status = complaint.status
@@ -121,6 +142,8 @@ async def update_complaint_status(
 
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    verify_officer_department_access(complaint, current_user, officer)
 
     prev_status = complaint.status
     complaint.status = payload.status.value
@@ -194,6 +217,8 @@ async def resolve_complaint(
 
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    verify_officer_department_access(complaint, current_user, officer)
 
     after_photo_url = None
     if after_photo and after_photo.filename:

@@ -28,8 +28,12 @@ class UserResponse(BaseModel):
     role: str
     is_active: Optional[bool] = True
     created_at: datetime
+    department_id: Optional[int] = None
     department_code: Optional[str] = None
+    department_name: Optional[str] = None
     officer_id: Optional[int] = None
+    zone: Optional[str] = None
+    designation: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

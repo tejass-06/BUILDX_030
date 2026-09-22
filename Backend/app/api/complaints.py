@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user, get_optional_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.models.officer import Officer
 from app.models.complaint import Complaint, ComplaintReport, ComplaintStatus
 from app.models.department import Department
 from app.schemas.complaint import (
@@ -197,18 +198,37 @@ def list_complaints(
     department_code: Optional[str] = None,
     limit: int = 50,
     offset: int = 0,
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(Complaint)
+
+    # 1. Strict Department & Role-Based Isolation
+    if current_user:
+        if current_user.role == UserRole.OFFICER.value:
+            officer = db.query(Officer).filter(Officer.user_id == current_user.id).first()
+            if officer and officer.department_id:
+                query = query.filter(Complaint.department_id == officer.department_id)
+            else:
+                return []
+        elif current_user.role == UserRole.CITIZEN.value:
+            query = query.filter(Complaint.citizen_id == current_user.id)
+        elif current_user.role in [UserRole.ADMIN.value, "COMMAND_CENTER"]:
+            if department_code:
+                dept = db.query(Department).filter(Department.code == department_code).first()
+                if dept:
+                    query = query.filter(Complaint.department_id == dept.id)
+    else:
+        if department_code:
+            dept = db.query(Department).filter(Department.code == department_code).first()
+            if dept:
+                query = query.filter(Complaint.department_id == dept.id)
+
     if status_filter:
         query = query.filter(Complaint.status == status_filter)
     if category:
         query = query.filter(Complaint.category == category)
-    if department_code:
-        dept = db.query(Department).filter(Department.code == department_code).first()
-        if dept:
-            query = query.filter(Complaint.department_id == dept.id)
-            
+        
     complaints = query.order_by(Complaint.created_at.desc()).offset(offset).limit(limit).all()
     return [format_complaint_response(c) for c in complaints]
 
@@ -223,6 +243,7 @@ def get_my_complaints(
 @router.get("/{complaint_id}", response_model=ComplaintDetailResponse)
 def get_complaint_detail(
     complaint_id: str,
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     query = db.query(Complaint)
@@ -233,6 +254,15 @@ def get_complaint_detail(
 
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    # Strict Department isolation check for officers
+    if current_user and current_user.role == UserRole.OFFICER.value:
+        officer = db.query(Officer).filter(Officer.user_id == current_user.id).first()
+        if not officer or (complaint.department_id and officer.department_id != complaint.department_id and complaint.officer_id != officer.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access forbidden: This grievance belongs to a different municipal department."
+            )
 
     return format_complaint_detail(complaint)
 

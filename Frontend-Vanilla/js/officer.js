@@ -22,11 +22,28 @@ const OfficerDashboard = {
       if (!isAuth) return;
     }
 
+    this.renderOfficerProfile();
     this.setupListeners();
-    await Promise.all([
-      this.loadDashboardKPIs(),
-      this.loadComplaints()
-    ]);
+    await this.loadComplaints();
+  },
+
+  async renderOfficerProfile() {
+    try {
+      const user = (typeof AuthManager !== 'undefined' ? AuthManager.getUser() : null) || {};
+      const nameEl = document.getElementById('officer-display-name');
+      const deptEl = document.getElementById('officer-display-dept');
+      const zoneEl = document.getElementById('officer-display-zone');
+      const desigEl = document.getElementById('officer-display-desig');
+
+      if (nameEl) nameEl.textContent = user.name || 'Municipal Officer';
+      if (deptEl) deptEl.textContent = user.department_name || user.department_code || 'General Redressal Department';
+      if (zoneEl) zoneEl.textContent = user.zone || 'Nagpur Central Zone';
+      if (desigEl) desigEl.textContent = user.designation || 'Nodal Officer';
+      
+      if (window.lucide) lucide.createIcons();
+    } catch (e) {
+      console.warn('Error rendering officer profile header:', e);
+    }
   },
 
   setupListeners() {
@@ -67,39 +84,45 @@ const OfficerDashboard = {
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => {
         this.loadComplaints();
-        this.loadDashboardKPIs();
-        Utils.showToast('Officer dashboard refreshed', 'info');
+        Utils.showToast('Officer department queue refreshed', 'info');
       });
     }
   },
 
-  async loadDashboardKPIs() {
+  renderDashboardKPIs() {
     const kpiContainer = document.getElementById('officer-kpi-grid');
     if (!kpiContainer) return;
 
     try {
-      const stats = await API.getPublicStats();
+      const all = this.complaints || [];
+      const now = new Date();
+      
+      const activeCount = all.filter(c => !['RESOLVED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
+      const urgentCount = all.filter(c => ['HIGH', 'CRITICAL'].includes((c.priority || '').toUpperCase()) && !['RESOLVED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
+      const overdueCount = all.filter(c => c.sla_deadline && new Date(c.sla_deadline) < now && !['RESOLVED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
+      const resolvedCount = all.filter(c => ['RESOLVED', 'CLOSED'].includes((c.status || '').toUpperCase())).length;
 
       kpiContainer.innerHTML = `
         <div class="stat-card">
-          <div class="stat-value" style="color: var(--primary-color);">${stats.pending_complaints || 0}</div>
-          <div class="stat-label">Active Assigned Issues</div>
+          <div class="stat-value" style="color: var(--primary-color);">${activeCount}</div>
+          <div class="stat-label">Active Department Issues</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" style="color: var(--danger);">${stats.urgent_complaints || 0}</div>
+          <div class="stat-value" style="color: var(--danger);">${urgentCount}</div>
           <div class="stat-label">Urgent / High Priority</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" style="color: var(--warning);">${stats.sla_delayed_count || 0}</div>
+          <div class="stat-value" style="color: var(--warning);">${overdueCount}</div>
           <div class="stat-label">SLA Overdue Warning</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" style="color: var(--success);">${stats.resolved_complaints || 0}</div>
-          <div class="stat-label">Resolved (This Month)</div>
+          <div class="stat-value" style="color: var(--success);">${resolvedCount}</div>
+          <div class="stat-label">Resolved in Department</div>
         </div>
       `;
+      if (window.lucide) lucide.createIcons();
     } catch (e) {
-      console.warn('KPI load error:', e);
+      console.warn('KPI render error:', e);
     }
   },
 
@@ -120,6 +143,7 @@ const OfficerDashboard = {
     try {
       const response = await API.getComplaints({ limit: 50 });
       this.complaints = response.items || (Array.isArray(response) ? response : []);
+      this.renderDashboardKPIs();
       this.applyFilters();
     } catch (err) {
       console.error('Failed to load officer complaints:', err);

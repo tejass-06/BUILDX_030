@@ -38,7 +38,7 @@ def test_audit_logs_lifecycle(client):
 
     # 3. Officer login and updates status
     officer_res = client.post("/api/v1/auth/login", json={
-        "email": "officer@nagar.local",
+        "email": "electrical.officer@nagar.local",
         "password": "Password@123"
     })
     assert officer_res.status_code == 200
