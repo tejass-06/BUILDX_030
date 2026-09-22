@@ -26,6 +26,16 @@ class DuplicateSignals(BaseModel):
     text: float
     time: float
 
+class SimilarComplaintItem(BaseModel):
+    public_id: str
+    title: str
+    category: str
+    status: str
+    similarity_score: float
+    distance_meters: Optional[float] = None
+    reports_count: int = 1
+    created_at: str
+
 class AIDuplicateCheckRequest(BaseModel):
     title: str
     description: str
@@ -39,6 +49,9 @@ class AIDuplicateCheckResponse(BaseModel):
     duplicate_score: float
     matched_complaint_id: Optional[str] = None
     signals: Optional[DuplicateSignals] = None
+    similar_complaints: Optional[List[SimilarComplaintItem]] = []
+    is_community_issue: Optional[bool] = False
+    community_reports_count: Optional[int] = 1
 
     model_config = ConfigDict(from_attributes=True)
 

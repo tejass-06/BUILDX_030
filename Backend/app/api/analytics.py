@@ -6,12 +6,14 @@ from app.core.database import get_db
 from app.schemas.analytics import (
     AnalyticsOverviewResponse,
     HotspotItem,
-    DepartmentAnalyticsItem
+    DepartmentAnalyticsItem,
+    ZoneAnalyticsItem
 )
 from app.services.analytics_service import (
     get_analytics_overview,
     get_analytics_hotspots,
-    get_department_analytics
+    get_department_analytics,
+    get_zone_analytics
 )
 
 router = APIRouter(prefix="/analytics", tags=["Analytics & Governance"])
@@ -30,3 +32,8 @@ def get_hotspots(db: Session = Depends(get_db)):
 def get_departments_analytics(db: Session = Depends(get_db)):
     data = get_department_analytics(db)
     return [DepartmentAnalyticsItem(**item) for item in data]
+
+@router.get("/zones", response_model=List[ZoneAnalyticsItem])
+def get_zones_analytics(db: Session = Depends(get_db)):
+    data = get_zone_analytics(db)
+    return [ZoneAnalyticsItem(**item) for item in data]

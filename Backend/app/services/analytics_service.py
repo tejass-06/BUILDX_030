@@ -9,7 +9,9 @@ from app.models.work import DepartmentWork
 from app.services.ai_service import calculate_geo_distance
 from app.services.sla_service import evaluate_sla_status
 
-def get_analytics_overview(db: Session) -> Dict[str, int]:
+from app.services.officer_service import NAGPUR_ZONES, determine_zone_from_location
+
+def get_analytics_overview(db: Session) -> Dict[str, Any]:
     all_complaints = db.query(Complaint).all()
     
     total = len(all_complaints)
@@ -26,9 +28,25 @@ def get_analytics_overview(db: Session) -> Dict[str, int]:
     ])
 
     sla_breached_count = 0
+    resolution_durations = []
+
     for c in all_complaints:
         if evaluate_sla_status(c.created_at, c.sla_hours, c.sla_deadline, c.status) == "BREACHED":
             sla_breached_count += 1
+        
+        # Calculate actual resolution duration if resolved or closed
+        if c.status in [ComplaintStatus.RESOLVED.value, ComplaintStatus.CLOSED.value, ComplaintStatus.CITIZEN_VERIFICATION.value]:
+            if c.resolutions:
+                res_time = c.resolutions[0].created_at
+                dur_hours = abs((res_time - c.created_at).total_seconds()) / 3600.0
+                resolution_durations.append(dur_hours)
+            elif c.updated_at and c.created_at:
+                dur_hours = abs((c.updated_at - c.created_at).total_seconds()) / 3600.0
+                if dur_hours > 0:
+                    resolution_durations.append(dur_hours)
+
+    avg_res_hours = round(sum(resolution_durations) / len(resolution_durations), 1) if resolution_durations else 0.0
+    sla_compliance = round(((total - sla_breached_count) / total) * 100.0, 1) if total > 0 else 100.0
 
     return {
         "total_complaints": total,
@@ -36,15 +54,14 @@ def get_analytics_overview(db: Session) -> Dict[str, int]:
         "resolved_complaints": resolved,
         "closed_complaints": closed,
         "reopened_complaints": reopened,
-        "sla_breached": sla_breached_count
+        "sla_breached": sla_breached_count,
+        "avg_resolution_hours": avg_res_hours,
+        "sla_compliance_rate": sla_compliance
     }
 
 def get_analytics_hotspots(db: Session) -> List[Dict[str, Any]]:
-    # Group by category and address / area
-    complaints = db.query(Complaint).filter(Complaint.latitude.isnot(None)).all()
-    if not complaints:
-        # Fallback to all complaints grouping by address
-        complaints = db.query(Complaint).all()
+    # Group real database complaints by address / coordinates and category
+    complaints = db.query(Complaint).all()
 
     hotspot_map: Dict[str, Dict[str, Any]] = {}
     for c in complaints:
@@ -56,13 +73,58 @@ def get_analytics_hotspots(db: Session) -> List[Dict[str, Any]]:
                 "category": c.category,
                 "complaint_count": 0,
                 "latitude": c.latitude,
-                "longitude": c.longitude
+                "longitude": c.longitude,
+                "severity_breakdown": {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "CRITICAL": 0}
             }
         hotspot_map[group_key]["complaint_count"] += 1
+        sev = (c.severity or "MEDIUM").upper()
+        if sev in hotspot_map[group_key]["severity_breakdown"]:
+            hotspot_map[group_key]["severity_breakdown"][sev] += 1
+        else:
+            hotspot_map[group_key]["severity_breakdown"][sev] = 1
 
     result = list(hotspot_map.values())
     result.sort(key=lambda x: x["complaint_count"], reverse=True)
     return result
+
+def get_zone_analytics(db: Session) -> List[Dict[str, Any]]:
+    """Aggregates real complaint and SLA metrics across municipal administrative zones."""
+    complaints = db.query(Complaint).all()
+    zone_stats: Dict[str, Dict[str, Any]] = {}
+
+    for z in NAGPUR_ZONES:
+        zone_stats[z["name"]] = {
+            "zone": z["name"],
+            "zone_no": z["zone_no"],
+            "total_complaints": 0,
+            "active_complaints": 0,
+            "resolved_complaints": 0,
+            "sla_breached": 0
+        }
+
+    for c in complaints:
+        zone_info = determine_zone_from_location(c.latitude, c.longitude, c.address)
+        zone_name = zone_info["name"]
+        if zone_name not in zone_stats:
+            zone_stats[zone_name] = {
+                "zone": zone_name,
+                "zone_no": zone_info.get("zone_no"),
+                "total_complaints": 0,
+                "active_complaints": 0,
+                "resolved_complaints": 0,
+                "sla_breached": 0
+            }
+        
+        zone_stats[zone_name]["total_complaints"] += 1
+        if c.status in [ComplaintStatus.RESOLVED.value, ComplaintStatus.CLOSED.value]:
+            zone_stats[zone_name]["resolved_complaints"] += 1
+        else:
+            zone_stats[zone_name]["active_complaints"] += 1
+
+        if evaluate_sla_status(c.created_at, c.sla_hours, c.sla_deadline, c.status) == "BREACHED":
+            zone_stats[zone_name]["sla_breached"] += 1
+
+    return list(zone_stats.values())
 
 def get_department_analytics(db: Session) -> List[Dict[str, Any]]:
     departments = db.query(Department).all()
@@ -75,9 +137,16 @@ def get_department_analytics(db: Session) -> List[Dict[str, Any]]:
         active = total - resolved
         
         sla_breached = 0
+        durations = []
         for c in dept_complaints:
             if evaluate_sla_status(c.created_at, c.sla_hours, c.sla_deadline, c.status) == "BREACHED":
                 sla_breached += 1
+            if c.status in [ComplaintStatus.RESOLVED.value, ComplaintStatus.CLOSED.value]:
+                if c.resolutions:
+                    dur = abs((c.resolutions[0].created_at - c.created_at).total_seconds()) / 3600.0
+                    durations.append(dur)
+
+        avg_dur = round(sum(durations) / len(durations), 1) if durations else 0.0
 
         results.append({
             "department": dept.name,
@@ -85,7 +154,8 @@ def get_department_analytics(db: Session) -> List[Dict[str, Any]]:
             "total": total,
             "resolved": resolved,
             "active": active,
-            "sla_breached": sla_breached
+            "sla_breached": sla_breached,
+            "avg_resolution_hours": avg_dur
         })
 
     return results

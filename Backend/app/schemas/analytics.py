@@ -9,6 +9,8 @@ class AnalyticsOverviewResponse(BaseModel):
     closed_complaints: int
     reopened_complaints: int
     sla_breached: int
+    avg_resolution_hours: Optional[float] = 0.0
+    sla_compliance_rate: Optional[float] = 100.0
 
 class HotspotItem(BaseModel):
     area: str
@@ -16,6 +18,15 @@ class HotspotItem(BaseModel):
     complaint_count: int
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    severity_breakdown: Optional[Dict[str, int]] = {}
+
+class ZoneAnalyticsItem(BaseModel):
+    zone: str
+    zone_no: Optional[int] = None
+    total_complaints: int
+    active_complaints: int
+    resolved_complaints: int
+    sla_breached: int
 
 class DepartmentAnalyticsItem(BaseModel):
     department: str
@@ -24,6 +35,7 @@ class DepartmentAnalyticsItem(BaseModel):
     resolved: int
     active: int
     sla_breached: int
+    avg_resolution_hours: Optional[float] = 0.0
 
 class DepartmentWorkCreate(BaseModel):
     department_id: int

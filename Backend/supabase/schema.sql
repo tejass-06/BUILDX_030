@@ -146,6 +146,21 @@ CREATE TABLE IF NOT EXISTS public.department_works (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 12. Audit Logs Table (Civic Transparency & Accountability)
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id SERIAL PRIMARY KEY,
+    complaint_id INTEGER REFERENCES public.complaints(id) ON DELETE CASCADE,
+    public_id VARCHAR(50),
+    user_id INTEGER REFERENCES public.users(id) ON DELETE SET NULL,
+    user_name VARCHAR(255),
+    role VARCHAR(50),
+    action VARCHAR(100) NOT NULL,
+    previous_state VARCHAR(100),
+    new_state VARCHAR(100),
+    details TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- =============================================================================
 -- PERFORMANCE INDEXES
 -- =============================================================================
@@ -160,6 +175,9 @@ CREATE INDEX IF NOT EXISTS idx_complaints_sla_deadline ON public.complaints(sla_
 CREATE INDEX IF NOT EXISTS idx_complaints_created_at ON public.complaints(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON public.notifications(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_works_dates_dept ON public.department_works(department_id, start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_complaint_id ON public.audit_logs(complaint_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON public.audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
 
 -- =============================================================================
 -- SUPABASE STORAGE BUCKETS
@@ -197,6 +215,7 @@ ALTER TABLE public.citizen_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.complaint_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.department_works ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Allow backend service role / postgres connection full access
 CREATE POLICY "Backend Full Access on Users" ON public.users FOR ALL USING (true);
@@ -209,3 +228,4 @@ CREATE POLICY "Backend Full Access on Verifications" ON public.citizen_verificat
 CREATE POLICY "Backend Full Access on Messages" ON public.complaint_messages FOR ALL USING (true);
 CREATE POLICY "Backend Full Access on Notifications" ON public.notifications FOR ALL USING (true);
 CREATE POLICY "Backend Full Access on Works" ON public.department_works FOR ALL USING (true);
+CREATE POLICY "Backend Full Access on Audit Logs" ON public.audit_logs FOR ALL USING (true);

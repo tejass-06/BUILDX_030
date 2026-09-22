@@ -7,6 +7,7 @@ from app.models.resolution import Resolution, CitizenVerification, VerificationR
 from app.models.message import ComplaintMessage
 from app.models.notification import Notification, NotificationChannel
 from app.models.work import DepartmentWork
+from app.models.audit import AuditLog
 
 __all__ = [
     "Base",
@@ -28,5 +29,6 @@ __all__ = [
     "ComplaintMessage",
     "Notification",
     "NotificationChannel",
-    "DepartmentWork"
+    "DepartmentWork",
+    "AuditLog"
 ]

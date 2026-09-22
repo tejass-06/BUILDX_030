@@ -10,10 +10,8 @@ from app.models.work import DepartmentWork
 
 DEMO_PASSWORD = "Password@123"
 
-def init_db(db: Session):
-    Base.metadata.create_all(bind=db.get_bind())
-
-    # 1. Seed Departments
+def init_departments(db: Session):
+    """Ensures standard municipal departments exist in database."""
     departments_data = [
         {"name": "Road Department", "code": DepartmentCode.ROAD.value, "default_sla_hours": 24},
         {"name": "Water Department", "code": DepartmentCode.WATER.value, "default_sla_hours": 24},
@@ -34,8 +32,17 @@ def init_db(db: Session):
             dept_map[d["code"]] = dept
         else:
             dept_map[d["code"]] = existing
+    db.commit()
+    return dept_map
 
-    # 2. Seed Users
+def init_db(db: Session):
+    """Production startup: creates tables and ensures standard departments are present."""
+    Base.metadata.create_all(bind=db.get_bind())
+    init_departments(db)
+
+def seed_demo_data(db: Session):
+    """Seeds demo users, officers, complaints, and works for development/test environments."""
+    dept_map = init_departments(db)
     # Citizen
     citizen = db.query(User).filter(User.email == "citizen@nagar.local").first()
     if not citizen:
@@ -50,36 +57,91 @@ def init_db(db: Session):
         db.add(citizen)
         db.flush()
 
-    # Officer
-    officer_user = db.query(User).filter(User.email == "officer@nagar.local").first()
-    if not officer_user:
-        officer_user = User(
-            auth_user_id="00000000-0000-0000-0000-000000000002",
-            name="Rajesh Patil",
-            email="officer@nagar.local",
-            phone="+919876543211",
-            password_hash=hash_password(DEMO_PASSWORD),
-            role=UserRole.OFFICER.value
-        )
-        db.add(officer_user)
-        db.flush()
+    # Officers for all Departments & Zones
+    officers_seed = [
+        {
+            "name": "Rajesh Patil",
+            "email": "officer@nagar.local",
+            "phone": "+919876543211",
+            "dept_code": DepartmentCode.ROAD.value,
+            "zone": "Ashi Nagar Zone",
+            "designation": "Senior Road Infrastructure Engineer"
+        },
+        {
+            "name": "Sunil Deshmukh",
+            "email": "water.officer@nagar.local",
+            "phone": "+919876543213",
+            "dept_code": DepartmentCode.WATER.value,
+            "zone": "Dharampeth Zone",
+            "designation": "Executive Water Works Engineer"
+        },
+        {
+            "name": "Vijay Kulkarni",
+            "email": "sanitation.officer@nagar.local",
+            "phone": "+919876543214",
+            "dept_code": DepartmentCode.GARBAGE.value,
+            "zone": "Gandhibagh Zone",
+            "designation": "Sanitation & Waste Supervisor"
+        },
+        {
+            "name": "Sanjay Raut",
+            "email": "drainage.officer@nagar.local",
+            "phone": "+919876543215",
+            "dept_code": DepartmentCode.DRAINAGE.value,
+            "zone": "Hanuman Nagar Zone",
+            "designation": "Drainage Operations Specialist"
+        },
+        {
+            "name": "Anand Shinde",
+            "email": "electrical.officer@nagar.local",
+            "phone": "+919876543216",
+            "dept_code": DepartmentCode.STREETLIGHT.value,
+            "zone": "Mangalwari Zone",
+            "designation": "Streetlight Grid Engineer"
+        },
+        {
+            "name": "Mahesh Gaikwad",
+            "email": "power.officer@nagar.local",
+            "phone": "+919876543217",
+            "dept_code": DepartmentCode.ELECTRICITY.value,
+            "zone": "Dhantoli Zone",
+            "designation": "Power Distribution Inspector"
+        }
+    ]
 
-    officer_profile = db.query(Officer).filter(Officer.user_id == officer_user.id).first()
-    if not officer_profile:
-        officer_profile = Officer(
-            user_id=officer_user.id,
-            department_id=dept_map[DepartmentCode.ROAD.value].id,
-            zone="Ashi Nagar Zone",
-            designation="Senior Civic Engineer"
-        )
-        db.add(officer_profile)
-        db.flush()
+    officer_profile = None
+    for idx, off_data in enumerate(officers_seed):
+        user = db.query(User).filter(User.email == off_data["email"]).first()
+        if not user:
+            user = User(
+                auth_user_id=f"00000000-0000-0000-0002-00000000000{idx+1}",
+                name=off_data["name"],
+                email=off_data["email"],
+                phone=off_data["phone"],
+                password_hash=hash_password(DEMO_PASSWORD),
+                role=UserRole.OFFICER.value
+            )
+            db.add(user)
+            db.flush()
+
+        prof = db.query(Officer).filter(Officer.user_id == user.id).first()
+        if not prof:
+            prof = Officer(
+                user_id=user.id,
+                department_id=dept_map[off_data["dept_code"]].id,
+                zone=off_data["zone"],
+                designation=off_data["designation"]
+            )
+            db.add(prof)
+            db.flush()
+        if off_data["email"] == "officer@nagar.local":
+            officer_profile = prof
 
     # Admin
     admin_user = db.query(User).filter(User.email == "admin@nagar.local").first()
     if not admin_user:
         admin_user = User(
-            auth_user_id="00000000-0000-0000-0000-000000000003",
+            auth_user_id="00000000-0000-0000-0003-000000000001",
             name="Commissioner Verma",
             email="admin@nagar.local",
             phone="+919876543212",

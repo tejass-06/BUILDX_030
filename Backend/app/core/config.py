@@ -27,21 +27,21 @@ class Settings(BaseSettings):
     # Ollama AI Configuration (Local Open LLM)
     OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
     OLLAMA_MODEL: str = "qwen3:8b"
-    OLLAMA_TIMEOUT_SECONDS: float = 120.0
+    OLLAMA_TIMEOUT_SECONDS: float = 15.0
+    OLLAMA_CONNECT_TIMEOUT_SECONDS: float = 2.0
     
     # Local Storage fallback
     UPLOAD_DIR: str = "uploads"
     
     # CORS
     CORS_ORIGINS: List[str] = [
-        "*",
-        "http://localhost:5500",
-        "http://127.0.0.1:5500",
-        "http://localhost:3000",
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
     ]
-
 
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
 

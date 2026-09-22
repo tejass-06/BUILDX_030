@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.notification import NotificationChannel
 from app.services.ai_service import verify_resolution_ai
 from app.services.notification_service import create_notification
+from app.services.audit_service import record_audit_log
 from app.websocket.manager import ws_manager
 
 async def submit_officer_resolution(
@@ -55,11 +56,26 @@ async def submit_officer_resolution(
     db.add(resolution)
 
     # 3. Transition Complaint Status to CITIZEN_VERIFICATION
+    prev_status = complaint.status
     complaint.status = ComplaintStatus.CITIZEN_VERIFICATION.value
     complaint.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(resolution)
     db.refresh(complaint)
+
+    # Record Audit Log
+    record_audit_log(
+        db=db,
+        action="RESOLVED",
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=officer.user_id,
+        user_name=officer.user.name if (officer and officer.user) else "Officer",
+        role="OFFICER",
+        previous_state=prev_status,
+        new_state="CITIZEN_VERIFICATION",
+        details=f"Resolution note: {resolution_note}"
+    )
 
     # 4. Notify Citizen
     if complaint.citizen_id:
@@ -116,6 +132,7 @@ async def process_citizen_verification(
     )
     db.add(verification)
 
+    prev_stat = complaint.status
     new_status = ComplaintStatus.CLOSED.value if result == VerificationResult.FIXED else ComplaintStatus.REOPENED.value
     complaint.status = new_status
     complaint.updated_at = datetime.now(timezone.utc)
@@ -123,6 +140,21 @@ async def process_citizen_verification(
     db.commit()
     db.refresh(verification)
     db.refresh(complaint)
+
+    # Record Audit Log
+    act_name = "CITIZEN_VERIFIED" if result == VerificationResult.FIXED else "REOPENED"
+    record_audit_log(
+        db=db,
+        action=act_name,
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=citizen.id,
+        user_name=citizen.name,
+        role=citizen.role,
+        previous_state=prev_stat,
+        new_state=new_status,
+        details=reopen_reason or feedback or f"Verification result: {result.value}"
+    )
 
     event_name = "complaint_closed" if result == VerificationResult.FIXED else "complaint_reopened"
     title_text = f"Complaint #{complaint.public_id} Closed" if result == VerificationResult.FIXED else f"Complaint #{complaint.public_id} Reopened"

@@ -113,6 +113,7 @@ def check_duplicate_complaint(
     max_score = 0.0
     best_signals = None
 
+    similar_list = []
     now = datetime.now(timezone.utc)
     new_text = f"{title} {description}"
 
@@ -151,6 +152,21 @@ def check_duplicate_complaint(
 
         score = round(score, 2)
 
+        # Calculate real physical distance if coordinates available
+        dist_m = calculate_geo_distance(latitude, longitude, comp.latitude, comp.longitude)
+
+        if score >= 0.35 or (dist_m is not None and dist_m <= 150.0):
+            similar_list.append({
+                "public_id": comp.public_id,
+                "title": comp.title,
+                "category": comp.category,
+                "status": comp.status,
+                "similarity_score": score,
+                "distance_meters": round(dist_m, 1) if dist_m is not None else None,
+                "reports_count": len(comp.reports),
+                "created_at": comp.created_at.isoformat()
+            })
+
         if score > max_score:
             max_score = score
             best_match = comp
@@ -161,11 +177,26 @@ def check_duplicate_complaint(
                 "time": s_time
             }
 
+    # Sort similar complaints by score descending
+    similar_list.sort(key=lambda x: x["similarity_score"], reverse=True)
+
     is_dup = max_score >= DUPLICATE_THRESHOLD and best_match is not None
+    matched_id = best_match.public_id if (best_match and (is_dup or max_score >= 0.40)) else None
+
+    # Calculate real community issue metrics
+    is_community = False
+    total_affected = 1
+    if best_match:
+        reports_cnt = len(best_match.reports)
+        total_affected = max(1, reports_cnt)
+        is_community = reports_cnt >= 2
 
     return {
         "is_duplicate": is_dup,
         "duplicate_score": max_score,
-        "matched_complaint_id": best_match.public_id if (best_match and is_dup) else (best_match.public_id if best_match and max_score > 0.4 else None),
-        "signals": best_signals
+        "matched_complaint_id": matched_id,
+        "signals": best_signals,
+        "similar_complaints": similar_list[:5],
+        "is_community_issue": is_community,
+        "community_reports_count": total_affected
     }

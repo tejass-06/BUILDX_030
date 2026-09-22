@@ -165,7 +165,13 @@ Complaint: {combined_complaint}
 
     t0 = time.time()
     try:
-        async with httpx.AsyncClient(timeout=settings.OLLAMA_TIMEOUT_SECONDS) as client:
+        timeout_config = httpx.Timeout(
+            connect=settings.OLLAMA_CONNECT_TIMEOUT_SECONDS,
+            read=settings.OLLAMA_TIMEOUT_SECONDS,
+            write=5.0,
+            pool=2.0
+        )
+        async with httpx.AsyncClient(timeout=timeout_config) as client:
             response = await client.post(
                 f"{settings.OLLAMA_BASE_URL}/api/generate",
                 json={

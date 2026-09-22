@@ -17,6 +17,9 @@ from app.services.duplicate_service import check_duplicate_complaint
 from app.services.sla_service import compute_sla_deadline, evaluate_sla_status
 from app.services.notification_service import create_notification
 from app.services.storage_service import save_evidence_photo
+from app.services.officer_service import assign_officer_auto
+from app.services.whatsapp_service import whatsapp_service
+from app.services.audit_service import record_audit_log
 from app.websocket.manager import ws_manager
 
 async def save_uploaded_file(file: UploadFile) -> Tuple[str, bytes]:
@@ -91,12 +94,18 @@ async def create_complaint_workflow(
     now = datetime.now(timezone.utc)
     sla_deadline = compute_sla_deadline(now, sla_hours)
 
-    # 6. Officer Auto-Assignment
+    # 6. Officer Auto-Assignment (Smart zone & workload based)
     assigned_officer = None
+    assignment_meta = {}
     status = ComplaintStatus.SUBMITTED.value
     if dept_id:
-        # Find first available officer in that department
-        assigned_officer = db.query(Officer).filter(Officer.department_id == dept_id).first()
+        assigned_officer, assignment_meta = assign_officer_auto(
+            db=db,
+            department_id=dept_id,
+            latitude=final_lat,
+            longitude=final_lng,
+            address=address
+        )
         if assigned_officer:
             status = ComplaintStatus.ASSIGNED.value
 
@@ -142,7 +151,63 @@ async def create_complaint_workflow(
     db.commit()
     db.refresh(complaint)
 
-    # 9. Trigger Notifications
+    # 9. Record Immutable Audit Logs
+    record_audit_log(
+        db=db,
+        action="COMPLAINT_CREATED",
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=citizen.id if citizen else None,
+        user_name=citizen.name if citizen else "Citizen",
+        role=citizen.role if citizen else "CITIZEN",
+        new_state=complaint.status,
+        details=f"Complaint '{complaint.title}' registered and routed to {dept_code} department."
+    )
+
+    if assigned_officer:
+        record_audit_log(
+            db=db,
+            action="ASSIGNED",
+            complaint_id=complaint.id,
+            public_id=complaint.public_id,
+            user_id=assigned_officer.user_id,
+            user_name=assigned_officer.user.name if (assigned_officer and assigned_officer.user) else "Officer",
+            role="OFFICER",
+            previous_state="SUBMITTED",
+            new_state="ASSIGNED",
+            details=assignment_meta.get("reason", f"Auto-assigned to officer {assigned_officer.id}")
+        )
+
+    # 10. Trigger Notifications (In-App, WebSockets, WhatsApp)
+    officer_name = assigned_officer.user.name if (assigned_officer and assigned_officer.user) else "Assigned Field Officer"
+    dept_name = department.name if department else "Municipal Department"
+
+    # WhatsApp Notifications (Real API or 'WhatsApp Ready' deep link)
+    wa_citizen_result = None
+    if citizen and citizen.phone:
+        wa_citizen_result = await whatsapp_service.send_citizen_complaint_confirmation(
+            citizen_phone=citizen.phone,
+            citizen_name=citizen.name,
+            complaint_public_id=complaint.public_id,
+            status=complaint.status,
+            department_name=dept_name,
+            officer_name=officer_name if assigned_officer else None,
+            sla_hours=sla_hours
+        )
+
+    wa_officer_result = None
+    if assigned_officer and assigned_officer.user and assigned_officer.user.phone:
+        wa_officer_result = await whatsapp_service.send_officer_assignment(
+            officer_phone=assigned_officer.user.phone,
+            officer_name=officer_name,
+            complaint_public_id=complaint.public_id,
+            category=complaint.category,
+            priority=complaint.priority,
+            location=complaint.address or "Nagpur Municipal Area",
+            sla_hours=sla_hours
+        )
+
+    # In-App Notifications
     if citizen:
         await create_notification(
             db=db,
@@ -150,7 +215,7 @@ async def create_complaint_workflow(
             complaint_id=complaint.id,
             notification_type="complaint_created",
             title=f"Complaint #{complaint.public_id} Registered",
-            body=f"Your complaint regarding '{complaint.title}' has been registered and routed to the {dept_code} Department. Estimated resolution in {sla_hours} hours.",
+            body=f"Your complaint regarding '{complaint.title}' has been registered and routed to the {dept_name}. Estimated resolution in {sla_hours} hours.",
             channel=NotificationChannel.WEB,
             broadcast_ws=True,
             ws_complaint_public_id=complaint.public_id
@@ -163,28 +228,45 @@ async def create_complaint_workflow(
             complaint_id=complaint.id,
             notification_type="complaint_assigned",
             title=f"New Task Assigned: #{complaint.public_id}",
-            body=f"A new {severity} priority issue '{complaint.title}' has been assigned to your department.",
+            body=f"A new {severity} priority issue '{complaint.title}' has been assigned to you ({assignment_meta.get('zone', 'Zone')}).",
             channel=NotificationChannel.WEB,
             broadcast_ws=True,
             ws_complaint_public_id=complaint.public_id
         )
 
-    # 10. Broadcast WebSocket Event
+    # 10. Broadcast WebSocket Events
+    event_payload = {
+        "id": complaint.id,
+        "public_id": complaint.public_id,
+        "title": complaint.title,
+        "category": complaint.category,
+        "severity": complaint.severity,
+        "priority": complaint.priority,
+        "status": complaint.status,
+        "department": dept_code,
+        "department_name": dept_name,
+        "officer_id": assigned_officer.id if assigned_officer else None,
+        "officer_name": officer_name if assigned_officer else None,
+        "zone": assignment_meta.get("zone"),
+        "address": complaint.address,
+        "sla_hours": complaint.sla_hours,
+        "created_at": complaint.created_at.isoformat()
+    }
     await ws_manager.broadcast_global(
         event="complaint_created",
-        data={
-            "id": complaint.id,
-            "public_id": complaint.public_id,
-            "title": complaint.title,
-            "category": complaint.category,
-            "severity": complaint.severity,
-            "status": complaint.status,
-            "department": dept_code
-        }
+        data=event_payload
+    )
+    await ws_manager.broadcast_to_complaint(
+        complaint_id=complaint.public_id,
+        event="complaint_created",
+        data=event_payload
     )
 
     return complaint, {
         "ai_analysis": ai_result,
         "duplicate_check": dup_result,
-        "location_source": loc_source
+        "location_source": loc_source,
+        "assignment": assignment_meta,
+        "whatsapp_citizen": wa_citizen_result,
+        "whatsapp_officer": wa_officer_result
     }

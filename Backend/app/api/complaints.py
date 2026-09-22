@@ -12,7 +12,9 @@ from app.schemas.complaint import (
     ComplaintDetailResponse,
     ComplaintReportResponse,
     ResolutionResponse,
-    CitizenVerificationResponse
+    CitizenVerificationResponse,
+    AuditLogResponse,
+    WhatsAppDeeplinkResponse
 )
 from app.core.config import settings
 from app.schemas.verification import CitizenVerifyRequest, ComplaintReopenRequest
@@ -22,6 +24,8 @@ from app.services.storage_service import save_evidence_photo
 from app.services.exif_service import extract_exif_gps
 from app.services.sla_service import evaluate_sla_status
 from app.services.verification_service import process_citizen_verification
+from app.services.audit_service import record_audit_log, get_complaint_audit_logs
+from app.services.whatsapp_service import whatsapp_service
 from app.models.resolution import VerificationResult
 from app.websocket.manager import ws_manager
 
@@ -33,8 +37,15 @@ def format_complaint_response(comp: Complaint) -> ComplaintResponse:
     sla_stat = evaluate_sla_status(comp.created_at, comp.sla_hours, comp.sla_deadline, comp.status)
     
     officer_name = None
-    if comp.officer and comp.officer.user:
-        officer_name = comp.officer.user.name
+    officer_phone = None
+    officer_zone = None
+    officer_designation = None
+    if comp.officer:
+        officer_zone = comp.officer.zone
+        officer_designation = comp.officer.designation
+        if comp.officer.user:
+            officer_name = comp.officer.user.name
+            officer_phone = comp.officer.user.phone
 
     return ComplaintResponse(
         id=comp.id,
@@ -52,8 +63,12 @@ def format_complaint_response(comp: Complaint) -> ComplaintResponse:
         location_source=comp.location_source,
         department_id=comp.department_id,
         department_code=comp.department.code if comp.department else None,
+        department_name=comp.department.name if comp.department else None,
         officer_id=comp.officer_id,
         officer_name=officer_name,
+        officer_phone=officer_phone,
+        officer_zone=officer_zone,
+        officer_designation=officer_designation,
         status=comp.status,
         sla_hours=comp.sla_hours,
         sla_deadline=comp.sla_deadline,
@@ -115,6 +130,23 @@ def format_complaint_detail(comp: Complaint) -> ComplaintDetailResponse:
             citizen_name=v.citizen.name if v.citizen else "Citizen"
         ))
 
+    audit_logs_resp = []
+    if hasattr(comp, "audit_logs") and comp.audit_logs:
+        for al in comp.audit_logs:
+            audit_logs_resp.append(AuditLogResponse(
+                id=al.id,
+                complaint_id=al.complaint_id,
+                public_id=al.public_id or comp.public_id,
+                user_id=al.user_id,
+                user_name=al.user_name,
+                role=al.role,
+                action=al.action,
+                previous_state=al.previous_state,
+                new_state=al.new_state,
+                details=al.details,
+                created_at=al.created_at
+            ))
+
     citizen_resp = None
     if comp.citizen:
         citizen_resp = UserResponse(
@@ -131,6 +163,7 @@ def format_complaint_detail(comp: Complaint) -> ComplaintDetailResponse:
         reports=reports_resp,
         resolutions=resolutions_resp,
         verifications=verifications_resp,
+        audit_logs=audit_logs_resp,
         citizen=citizen_resp
     )
 
@@ -244,6 +277,18 @@ async def join_complaint(
     db.commit()
     db.refresh(complaint)
 
+    # Record Audit Log
+    record_audit_log(
+        db=db,
+        action="CITIZEN_JOINED",
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        role=current_user.role,
+        details=f"Citizen joined complaint issue cluster (total reports: {len(complaint.reports)})"
+    )
+
     # Broadcast event
     await ws_manager.broadcast_to_complaint(
         complaint_id=complaint.public_id,
@@ -307,3 +352,66 @@ async def reopen_complaint(
     )
 
     return format_complaint_detail(complaint)
+
+@router.get("/{complaint_id}/audit-logs", response_model=List[AuditLogResponse])
+def get_complaint_audits(
+    complaint_id: str,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Complaint)
+    if complaint_id.isdigit():
+        complaint = query.filter((Complaint.id == int(complaint_id)) | (Complaint.public_id == complaint_id)).first()
+    else:
+        complaint = query.filter(Complaint.public_id == complaint_id).first()
+
+    if not complaint:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    audits = get_complaint_audit_logs(db, complaint.id)
+    return [
+        AuditLogResponse(
+            id=al.id,
+            complaint_id=al.complaint_id,
+            public_id=al.public_id or complaint.public_id,
+            user_id=al.user_id,
+            user_name=al.user_name,
+            role=al.role,
+            action=al.action,
+            previous_state=al.previous_state,
+            new_state=al.new_state,
+            details=al.details,
+            created_at=al.created_at
+        )
+        for al in audits
+    ]
+
+@router.get("/{complaint_id}/whatsapp-link", response_model=WhatsAppDeeplinkResponse)
+def get_whatsapp_deeplink(
+    complaint_id: str,
+    action: Optional[str] = "STATUS_UPDATE",
+    phone: Optional[str] = None,
+    note: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Complaint)
+    if complaint_id.isdigit():
+        complaint = query.filter((Complaint.id == int(complaint_id)) | (Complaint.public_id == complaint_id)).first()
+    else:
+        complaint = query.filter(Complaint.public_id == complaint_id).first()
+
+    if not complaint:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
+
+    officer_name = complaint.officer.user.name if (complaint.officer and complaint.officer.user) else None
+    target_phone = phone or (complaint.citizen.phone if complaint.citizen else (complaint.officer.user.phone if complaint.officer and complaint.officer.user else None))
+
+    link_data = whatsapp_service.generate_action_deeplink(
+        complaint_public_id=complaint.public_id,
+        status=complaint.status,
+        category=complaint.category,
+        recipient_phone=target_phone,
+        officer_name=officer_name,
+        note=note
+    )
+
+    return WhatsAppDeeplinkResponse(**link_data)

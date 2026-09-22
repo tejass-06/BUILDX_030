@@ -10,6 +10,7 @@ from app.models.complaint import Complaint
 from app.models.message import ComplaintMessage
 from app.schemas.message import MessageResponse, MessageCreate
 from app.services.complaint_service import save_uploaded_file
+from app.services.audit_service import record_audit_log
 from app.websocket.manager import ws_manager
 
 router = APIRouter(prefix="/complaints", tags=["Complaint Messaging"])
@@ -71,6 +72,18 @@ async def create_complaint_message(
     db.add(msg)
     db.commit()
     db.refresh(msg)
+
+    # Record Audit Log
+    record_audit_log(
+        db=db,
+        action="COMMENT_ADDED",
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        role=current_user.role,
+        details=f"Message: {payload.message[:100]}"
+    )
 
     # Broadcast WebSocket
     await ws_manager.broadcast_to_complaint(

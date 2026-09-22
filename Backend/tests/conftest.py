@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base, get_db
 from app.core.config import settings
-from app.db.seed import init_db
+from app.db.seed import init_db, seed_demo_data
 from app.main import app
 
 # Test database
@@ -26,7 +26,7 @@ def setup_test_db():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = TestingSessionLocal()
-    init_db(db)
+    seed_demo_data(db)
     db.close()
     yield
     Base.metadata.drop_all(bind=engine)

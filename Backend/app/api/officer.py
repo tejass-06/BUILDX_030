@@ -16,6 +16,7 @@ from app.api.complaints import format_complaint_response, format_complaint_detai
 from app.services.storage_service import save_evidence_photo
 from app.services.verification_service import submit_officer_resolution
 from app.services.notification_service import create_notification
+from app.services.audit_service import record_audit_log
 from app.websocket.manager import ws_manager
 
 router = APIRouter(prefix="/officer", tags=["Officer Operations"])
@@ -74,12 +75,26 @@ async def assign_complaint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
 
     target_officer_id = payload.officer_id if (payload and payload.officer_id) else (officer.id if officer else None)
-    
+    prev_status = complaint.status
     complaint.officer_id = target_officer_id
     complaint.status = ComplaintStatus.ASSIGNED.value
     complaint.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(complaint)
+
+    # Record Audit Log
+    record_audit_log(
+        db=db,
+        action="ASSIGNED",
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        role=current_user.role,
+        previous_state=prev_status,
+        new_state="ASSIGNED",
+        details=f"Assigned to officer ID {target_officer_id}"
+    )
 
     # Broadcast status change
     await ws_manager.broadcast_to_complaint(
@@ -97,6 +112,7 @@ async def update_complaint_status(
     auth_data: tuple[User, Optional[Officer]] = Depends(require_officer),
     db: Session = Depends(get_db)
 ):
+    current_user, officer = auth_data
     query = db.query(Complaint)
     if complaint_id.isdigit():
         complaint = query.filter((Complaint.id == int(complaint_id)) | (Complaint.public_id == complaint_id)).first()
@@ -106,10 +122,26 @@ async def update_complaint_status(
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
 
+    prev_status = complaint.status
     complaint.status = payload.status.value
     complaint.updated_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(complaint)
+
+    # Record Audit Log
+    action_type = "WORK_STARTED" if payload.status.value == ComplaintStatus.IN_PROGRESS.value else "STATUS_CHANGED"
+    record_audit_log(
+        db=db,
+        action=action_type,
+        complaint_id=complaint.id,
+        public_id=complaint.public_id,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        role=current_user.role,
+        previous_state=prev_status,
+        new_state=complaint.status,
+        details=payload.note or f"Status changed to {complaint.status}"
+    )
 
     # Notify Citizen
     if complaint.citizen_id:

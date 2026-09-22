@@ -7,6 +7,8 @@ def test_analytics_endpoints(client):
     assert "active_complaints" in data
     assert "resolved_complaints" in data
     assert "sla_breached" in data
+    assert "avg_resolution_hours" in data
+    assert "sla_compliance_rate" in data
     assert data["total_complaints"] >= 5
 
     # Hotspots
@@ -22,6 +24,13 @@ def test_analytics_endpoints(client):
     depts = res_depts.json()
     assert isinstance(depts, list)
     assert len(depts) >= 6
+
+    # Zones
+    res_zones = client.get("/api/v1/analytics/zones")
+    assert res_zones.status_code == 200
+    zones = res_zones.json()
+    assert isinstance(zones, list)
+    assert len(zones) >= 5
 
 def test_department_works_and_conflicts(client):
     # List works

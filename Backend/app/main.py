@@ -46,27 +46,68 @@ app.add_middleware(
 os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-# Health Check (Root level as specified)
+import httpx
+from sqlalchemy import text
+from app.services.supabase_service import is_supabase_configured
+
+# Health Check (Root level with subsystem diagnostics)
 @app.get("/health", tags=["Health"])
-def health_check():
+async def health_check():
+    # 1. Check Database
+    db_status = "connected"
+    try:
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = f"unhealthy: {type(e).__name__}"
+
+    # 2. Check Ollama AI Server
+    ollama_info = {"status": "unavailable", "model": settings.OLLAMA_MODEL}
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            res = await client.get(f"{settings.OLLAMA_BASE_URL}/api/tags")
+            if res.status_code == 200:
+                ollama_info["status"] = "available"
+    except Exception:
+        ollama_info["status"] = "offline_deterministic_fallback_active"
+
+    # 3. Check Storage Backend
+    storage_provider = "supabase" if is_supabase_configured() else "local"
+
+    overall_status = "ok" if db_status == "connected" else "degraded"
+
     return {
-        "status": "ok",
-        "service": "nagar-saathi-backend"
+        "status": overall_status,
+        "service": "nagar-saathi-backend",
+        "database": db_status,
+        "ollama": ollama_info,
+        "storage": {
+            "provider": storage_provider,
+            "complaints_bucket": settings.SUPABASE_STORAGE_BUCKET_COMPLAINTS
+        }
     }
 
 # Include API v1 routes
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# WebSocket Endpoint
+# WebSocket Endpoints
+@app.websocket("/ws/global")
+async def websocket_global_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket, "global")
+    try:
+        while True:
+            await websocket.receive_text()
+            await websocket.send_text('{"type": "ack", "channel": "global"}')
+    except (WebSocketDisconnect, Exception):
+        ws_manager.disconnect(websocket, "global")
+
 @app.websocket("/ws/complaints/{complaint_id}")
 async def websocket_complaint_endpoint(websocket: WebSocket, complaint_id: str):
     await ws_manager.connect(websocket, complaint_id)
     try:
         while True:
-            data = await websocket.receive_text()
-            # Echo or heartbeat if client sends ping
+            await websocket.receive_text()
             await websocket.send_text(f'{{"type": "ack", "complaint_id": "{complaint_id}"}}')
-    except WebSocketDisconnect:
-        ws_manager.disconnect(websocket, complaint_id)
-    except Exception:
+    except (WebSocketDisconnect, Exception):
         ws_manager.disconnect(websocket, complaint_id)

@@ -75,8 +75,12 @@ class ComplaintResponse(BaseModel):
     location_source: str
     department_id: Optional[int] = None
     department_code: Optional[str] = None
+    department_name: Optional[str] = None
     officer_id: Optional[int] = None
     officer_name: Optional[str] = None
+    officer_phone: Optional[str] = None
+    officer_zone: Optional[str] = None
+    officer_designation: Optional[str] = None
     status: str
     sla_hours: int
     sla_deadline: Optional[datetime] = None
@@ -88,8 +92,32 @@ class ComplaintResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class AuditLogResponse(BaseModel):
+    id: int
+    complaint_id: Optional[int] = None
+    public_id: Optional[str] = None
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    role: Optional[str] = None
+    action: str
+    previous_state: Optional[str] = None
+    new_state: Optional[str] = None
+    details: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class WhatsAppDeeplinkResponse(BaseModel):
+    status: str = "WhatsApp Ready"
+    label: str = "Open WhatsApp"
+    recipient_phone: Optional[str] = None
+    complaint_public_id: str
+    deeplink: str
+    message: str
+
 class ComplaintDetailResponse(ComplaintResponse):
     reports: List[ComplaintReportResponse] = []
     resolutions: List[ResolutionResponse] = []
     verifications: List[CitizenVerificationResponse] = []
+    audit_logs: List[AuditLogResponse] = []
     citizen: Optional[UserResponse] = None
