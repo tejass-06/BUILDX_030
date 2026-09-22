@@ -151,3 +151,21 @@ export interface DepartmentConflictData {
 }
 
 export type SupportedLanguage = 'en' | 'mr' | 'hi';
+
+export interface ReportDraft {
+  description: string;
+  language: SupportedLanguage;
+  location: LocationData;
+  photoUrl?: string;
+  hasPhoto: boolean;
+  category: string;
+  severity: ComplaintPriority;
+  departmentCode: string;
+  departmentName: string;
+  slaHours: number;
+  aiConfidence: number;
+  duplicateClusterId: string;
+  duplicateSimilarity: number;
+  duplicateMemberCount: number;
+  existingComplaintId: string;
+}
