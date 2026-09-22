@@ -17,48 +17,28 @@
   <div id="toast-container" class="toast-container"></div>
 
   <main class="container" style="max-width: 800px; padding-top: 32px; padding-bottom: 60px;">
-    <!-- Stepper Navigation -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 8px;">
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary-color);">
-        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-color); color: white; display: grid; place-items: center; font-size: 0.85rem;">1</span>
-        <span>Report Issue</span>
+    <!-- Report Card -->
+    <div class="card" style="padding: 28px;" id="report-card-container">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+          Report a Civic Problem
+        </h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0;">
+          Voice your complaint in Marathi, Hindi, or English. Attach a photo and location for rapid NMC resolution.
+        </p>
       </div>
-      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
-        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">2</span>
-        <span>AI Analysis</span>
-      </div>
-      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
-        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">3</span>
-        <span>Duplicate Check</span>
-      </div>
-      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
-      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
-        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">4</span>
-        <span>Track</span>
-      </div>
-    </div>
 
-    <div class="card" style="padding: 28px;">
-      <h2 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 6px;">
-        Report Civic Problem
-      </h2>
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
-        Speak in Marathi / Hindi / English or type details. Attach a photo and pinpoint the location.
-      </p>
-
-      <!-- Voice Input Section -->
+      <!-- Natural Voice Input Section -->
       <div class="voice-box">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
             <div style="font-weight: 700; color: #1e40af; font-size: 0.95rem;">
               <i data-lucide="mic" style="vertical-align: middle;"></i> Natural Voice Input
             </div>
-            <span class="badge badge-primary">Multilingual Speech AI</span>
+            <span class="badge badge-primary">Multilingual Speech</span>
           </div>
 
-          <!-- Voice Language Selector -->
+          <!-- Language Selector -->
           <div style="display: flex; align-items: center; gap: 6px;">
             <label for="voice-lang-select" style="font-size: 0.8rem; font-weight: 600; color: #1e40af;">Language:</label>
             <select id="voice-lang-select" class="form-control" style="width: auto; padding: 4px 10px; font-size: 0.8rem;">
@@ -97,26 +77,26 @@
         <!-- Problem Description -->
         <div class="form-group">
           <label class="form-label" for="complaint-description">
-            Problem Description <span style="color: var(--danger);">*</span>
+            Describe the Problem <span style="color: var(--danger);">*</span>
           </label>
           <textarea 
             id="complaint-description" 
             class="form-control" 
             rows="4" 
-            placeholder="Type your complaint or use voice input above. e.g. Clean water pipeline leaking heavily near Ashi Nagar square for 2 days..."
+            placeholder="Type your complaint or use the voice button above..." 
             required
           ></textarea>
         </div>
 
-        <!-- Category (Optional Override, AI will auto-classify) -->
+        <!-- Optional Category Hint -->
         <div class="form-group">
           <label class="form-label" for="complaint-category">
-            Civic Category (AI will verify automatically)
+            Civic Category (Optional)
           </label>
           <select id="complaint-category" class="form-control">
-            <option value="">Auto-Detect via AI (Recommended)</option>
+            <option value="">Auto-Detect (Recommended)</option>
             <option value="WATER_LEAKAGE">Water Leakage / Pipe Burst</option>
-            <option value="POTHOLE">Pothole / Broken Road</option>
+            <option value="POTHOLE">Pothole / Damaged Road</option>
             <option value="GARBAGE">Garbage / Waste Dumping</option>
             <option value="DRAINAGE">Drainage / Sewage Overflow</option>
             <option value="STREETLIGHT">Streetlight Failure</option>
@@ -125,10 +105,10 @@
           </select>
         </div>
 
-        <!-- Photo Upload & Preview -->
+        <!-- Photo Upload & Instant Preview -->
         <div class="form-group">
           <label class="form-label" for="complaint-photo">
-            Attach Photo (Optional - Helps AI verify issue & location EXIF)
+            Attach Photo (Optional)
           </label>
           <input type="file" id="complaint-photo" class="form-control" accept="image/*">
           
@@ -142,14 +122,14 @@
           </div>
         </div>
 
-        <!-- Location Resolution (GPS / Map) -->
+        <!-- Location Section -->
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
             <label class="form-label" for="complaint-location-text" style="margin-bottom: 0;">
-              Location / Landmark <span style="color: var(--danger);">*</span>
+              Location / Area <span style="color: var(--danger);">*</span>
             </label>
             <button type="button" class="btn btn-sm btn-secondary" id="btn-get-gps">
-              <i data-lucide="crosshair"></i> Current GPS
+              <i data-lucide="crosshair"></i> Use Current Location
             </button>
           </div>
           <input 
@@ -159,7 +139,7 @@
             placeholder="e.g. Ashi Nagar Square, Kamptee Road, Nagpur" 
             required
           >
-          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;" id="location-status-hint">
             Priority: Photo EXIF &gt; Device GPS &gt; Map Pinpoint.
           </p>
 
@@ -167,14 +147,14 @@
           <div id="location-picker-map" class="map-container" style="height: 220px; margin-top: 10px;"></div>
         </div>
 
-        <!-- Citizen Contact -->
+        <!-- Citizen Contact Details -->
         <div class="grid grid-2" style="margin-bottom: 24px;">
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label" for="citizen-name">Your Name</label>
             <input type="text" id="citizen-name" class="form-control" placeholder="Citizen Name">
           </div>
           <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="citizen-phone">Mobile Number (For WhatsApp / SMS)</label>
+            <label class="form-label" for="citizen-phone">Mobile Number (For WhatsApp Updates)</label>
             <input type="tel" id="citizen-phone" class="form-control" placeholder="10-digit mobile number">
           </div>
         </div>
@@ -182,11 +162,67 @@
         <!-- Submit Button -->
         <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
           <a href="citizen.html" class="btn btn-secondary">Cancel</a>
-          <button type="submit" class="btn btn-primary" id="btn-proceed-ai">
-            <span>Analyze with AI</span> <i data-lucide="arrow-right"></i>
+          <button type="submit" class="btn btn-primary" id="btn-submit-complaint" style="padding: 12px 28px; font-weight: 700; font-size: 1rem;">
+            <i data-lucide="send"></i> <span>Submit Complaint</span>
           </button>
         </div>
       </form>
+    </div>
+
+    <!-- Progressive Submission Progress Overlay -->
+    <div id="submit-progress-overlay" class="card" style="display: none; padding: 48px 32px; text-align: center;">
+      <div class="spinner" style="margin: 0 auto 20px auto; width: 48px; height: 48px; border-width: 4px;"></div>
+      <h3 id="progress-status-title" style="font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+        Submitting your complaint...
+      </h3>
+      <p id="progress-status-subtitle" style="font-size: 0.95rem; color: var(--text-muted); max-width: 440px; margin: 0 auto;">
+        Connecting to Nagpur Municipal Corporation redressing system...
+      </p>
+    </div>
+
+    <!-- Registration Success Card -->
+    <div id="submit-success-card" class="card" style="display: none; padding: 32px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="width: 56px; height: 56px; background: #ecfdf5; color: #059669; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 12px auto;">
+          <i data-lucide="check-circle" style="width: 32px; height: 32px;"></i>
+        </div>
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+          Complaint Registered Successfully!
+        </h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Your grievance has been assigned and queued for field execution.
+        </p>
+      </div>
+
+      <!-- Confirmation Details Grid -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--border-radius-sm); padding: 20px; margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Ticket / Complaint ID</div>
+          <div id="success-ticket-id" style="font-family: monospace; font-size: 1.15rem; font-weight: 800; color: var(--primary-color); margin-top: 4px;">-</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Responsible Team</div>
+          <div id="success-department" style="font-weight: 700; color: #1e293b; margin-top: 4px;">NMC Public Works</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Current Status</div>
+          <div id="success-status-badge" style="margin-top: 4px;"><span class="badge badge-assigned">Submitted / Assigned</span></div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Expected Resolution SLA</div>
+          <div id="success-sla" style="font-weight: 700; color: var(--primary-color); margin-top: 4px;">24 Hours</div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+        <a href="citizen.html" class="btn btn-secondary">
+          <i data-lucide="home"></i> Go to My Complaints
+        </a>
+        <a href="#" id="btn-success-track" class="btn btn-primary" style="padding: 10px 24px; font-weight: 700;">
+          <i data-lucide="search"></i> Track Complaint Live →
+        </a>
+      </div>
     </div>
   </main>
 
