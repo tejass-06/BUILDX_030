@@ -28,34 +28,34 @@ const App = {
       <header class="navbar">
         <div class="navbar-container">
           <a href="index.html" class="brand">
-            <div class="brand-logo">
-              <i data-lucide="shield-check"></i>
+            <div class="brand-logo-icon">
+              <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
             </div>
             <div class="brand-text">
-              <span>NagarSaathi</span>
+              <span class="brand-name">NagarSaathi</span>
               <span class="brand-subtitle">AI Civic Governance • Nagpur</span>
             </div>
           </a>
 
           <nav class="nav-links" id="nav-links">
             <a href="citizen.html" class="nav-link" data-page="citizen">
-              <i data-lucide="home"></i>
+              <i data-lucide="home" style="width: 16px; height: 16px;"></i>
               <span data-i18n="citizen_home">Citizen Portal</span>
             </a>
             <a href="report.html" class="nav-link" data-page="report">
-              <i data-lucide="plus-circle"></i>
+              <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
               <span data-i18n="report_problem">Report Problem</span>
             </a>
             <a href="tracking.html" class="nav-link" data-page="tracking">
-              <i data-lucide="search"></i>
+              <i data-lucide="search" style="width: 16px; height: 16px;"></i>
               <span data-i18n="track_status">Track Status</span>
             </a>
             <a href="officer.html" class="nav-link" data-page="officer">
-              <i data-lucide="briefcase"></i>
+              <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i>
               <span>Officer Desk</span>
             </a>
             <a href="command-center.html" class="nav-link" data-page="command-center">
-              <i data-lucide="activity"></i>
+              <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
               <span>Command Center</span>
             </a>
           </nav>
@@ -69,19 +69,19 @@ const App = {
             </div>
 
             <!-- Auth Status Widget -->
-            <div class="auth-widget" id="nav-auth-widget" style="display: flex; align-items: center; gap: 8px;">
+            <div class="auth-widget" id="nav-auth-widget">
               ${isAuth ? `
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
-                  <span style="font-weight: 700; color: #1e293b;">${Utils.escapeHtml(user.name || user.email)}</span>
-                  <span class="badge ${user.role === 'OFFICER' ? 'badge-warning' : (user.role === 'ADMIN' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.7rem;">
+                <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;">
+                  <span style="font-weight: 700; color: #1e293b; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${Utils.escapeHtml(user.name || user.email)}</span>
+                  <span class="badge ${user.role === 'OFFICER' ? 'badge-warning' : (user.role === 'ADMIN' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.68rem; padding: 2px 6px;">
                     ${user.role || 'CITIZEN'}
                   </span>
-                  <button type="button" class="btn btn-sm btn-secondary" onclick="AuthManager.logout()" title="Sign Out" style="padding: 4px 8px;">
-                    <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="AuthManager.logout()" title="Sign Out" style="padding: 4px 8px; font-size: 0.75rem;">
+                    <i data-lucide="log-out" style="width: 13px; height: 13px;"></i>
                   </button>
                 </div>
               ` : `
-                <a href="login.html" class="btn btn-sm btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                <a href="login.html" class="btn btn-sm btn-secondary" style="padding: 5px 12px; font-size: 0.8rem; font-weight: 600;">
                   <i data-lucide="log-in" style="width: 14px; height: 14px;"></i> Sign In
                 </a>
               `}
