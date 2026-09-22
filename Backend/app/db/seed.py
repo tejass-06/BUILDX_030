@@ -35,9 +35,26 @@ def init_departments(db: Session):
     db.commit()
     return dept_map
 
+def run_auto_migrations(db: Session):
+    """Ensures newly added columns exist in tables across database backends (SQLite / PostgreSQL)."""
+    from sqlalchemy import text, inspect
+    bind = db.get_bind()
+    inspector = inspect(bind)
+    table_names = inspector.get_table_names()
+
+    # Check users table
+    if "users" in table_names:
+        cols = [c["name"] for c in inspector.get_columns("users")]
+        if "profile_photo_url" not in cols:
+            db.execute(text("ALTER TABLE users ADD COLUMN profile_photo_url VARCHAR(500)"))
+        if "preferred_language" not in cols:
+            db.execute(text("ALTER TABLE users ADD COLUMN preferred_language VARCHAR(50) DEFAULT 'en'"))
+        db.commit()
+
 def init_db(db: Session):
-    """Production startup: creates tables and ensures standard departments are present."""
+    """Production startup: creates tables, runs migrations and ensures standard departments are present."""
     Base.metadata.create_all(bind=db.get_bind())
+    run_auto_migrations(db)
     init_departments(db)
 
 def seed_demo_data(db: Session):
