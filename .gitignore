@@ -26,3 +26,19 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 *.tsbuildinfo
+
+# Python & Backend
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.db
+*.sqlite
+nagar_saathi.db
+test_nagar_saathi.db
+scratch/
+uploads/*
+!uploads/.gitkeep
+

@@ -57,3 +57,34 @@ cd Frontend
 npm run build
 ```
 Build verification passes cleanly with TypeScript checks and production asset bundling.
+
+---
+
+## ⚡ Backend Platform (FastAPI + Ollama AI + Supabase)
+
+### Prerequisites
+- Python 3.11+
+- Ollama with model `qwen3:8b` (optional for local AI categorization)
+
+### Backend Setup & Running
+```bash
+# 1. Install Python dependencies
+pip install -r requirements.txt
+
+# 2. Configure environment
+cp .env.example .env
+
+# 3. Start FastAPI server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+- **Health Check:** `http://localhost:8000/health`
+- **Interactive Swagger API Docs:** `http://localhost:8000/docs`
+- **ReDoc:** `http://localhost:8000/redoc`
+
+### Automated Test Suite
+```bash
+python -m pytest -v
+```
+All 21 unit and integration test suites pass 100%.
+
