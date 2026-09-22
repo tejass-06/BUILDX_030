@@ -84,6 +84,24 @@ const API = {
     });
   },
 
+  async updateProfile(payload) {
+    return this.request("/auth/profile", {
+      method: "PATCH",
+      headers: this.getHeaders(),
+      body: JSON.stringify(payload)
+    });
+  },
+
+  async uploadProfilePhoto(photoFile) {
+    const formData = new FormData();
+    formData.append("photo", photoFile);
+    return this.request("/auth/profile/photo", {
+      method: "POST",
+      headers: this.getHeaders(true),
+      body: formData
+    });
+  },
+
   async getPendingOfficerRequests() {
     return this.request("/auth/officer-requests", {
       method: "GET",

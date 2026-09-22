@@ -27,6 +27,7 @@ const App = {
 
     // Dynamic Role-Based Navigation Links
     let navLinksHtml = '';
+    let mobileLinksHtml = '';
 
     if (role === 'OFFICER') {
       navLinksHtml = `
@@ -37,6 +38,21 @@ const App = {
         <a href="tracking.html" class="nav-link" data-page="tracking">
           <i data-lucide="search" style="width: 16px; height: 16px;"></i>
           <span>Track Grievance</span>
+        </a>
+        <a href="profile.html" class="nav-link" data-page="profile">
+          <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+          <span>Profile</span>
+        </a>
+      `;
+      mobileLinksHtml = `
+        <a href="officer.html" class="mobile-nav-link" data-page="officer">
+          <i data-lucide="briefcase"></i> Officer Dashboard
+        </a>
+        <a href="tracking.html" class="mobile-nav-link" data-page="tracking">
+          <i data-lucide="search"></i> Track Grievance
+        </a>
+        <a href="profile.html" class="mobile-nav-link" data-page="profile">
+          <i data-lucide="user"></i> Officer Profile
         </a>
       `;
     } else if (role === 'ADMIN' || role === 'COMMAND_CENTER') {
@@ -52,6 +68,24 @@ const App = {
         <a href="citizen.html" class="nav-link" data-page="citizen">
           <i data-lucide="home" style="width: 16px; height: 16px;"></i>
           <span>Citizen Portal</span>
+        </a>
+        <a href="profile.html" class="nav-link" data-page="profile">
+          <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+          <span>Profile</span>
+        </a>
+      `;
+      mobileLinksHtml = `
+        <a href="command-center.html" class="mobile-nav-link" data-page="command-center">
+          <i data-lucide="activity"></i> Command Center
+        </a>
+        <a href="officer.html" class="mobile-nav-link" data-page="officer">
+          <i data-lucide="briefcase"></i> Officer Desk
+        </a>
+        <a href="citizen.html" class="mobile-nav-link" data-page="citizen">
+          <i data-lucide="home"></i> Citizen Portal
+        </a>
+        <a href="profile.html" class="mobile-nav-link" data-page="profile">
+          <i data-lucide="user"></i> Admin Profile
         </a>
       `;
     } else {
@@ -69,6 +103,28 @@ const App = {
           <i data-lucide="search" style="width: 16px; height: 16px;"></i>
           <span data-i18n="track_status">Track Status</span>
         </a>
+        ${isAuth ? `
+        <a href="profile.html" class="nav-link" data-page="profile">
+          <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+          <span>Profile</span>
+        </a>
+        ` : ''}
+      `;
+      mobileLinksHtml = `
+        <a href="citizen.html" class="mobile-nav-link" data-page="citizen">
+          <i data-lucide="home"></i> <span data-i18n="citizen_home">Citizen Home</span>
+        </a>
+        <a href="report.html" class="mobile-nav-link" data-page="report">
+          <i data-lucide="plus-circle"></i> <span data-i18n="report_problem">Report Problem</span>
+        </a>
+        <a href="tracking.html" class="mobile-nav-link" data-page="tracking">
+          <i data-lucide="search"></i> <span data-i18n="track_status">Track Status</span>
+        </a>
+        ${isAuth ? `
+        <a href="profile.html" class="mobile-nav-link" data-page="profile">
+          <i data-lucide="user"></i> <span>Profile</span>
+        </a>
+        ` : ''}
       `;
     }
 
@@ -101,12 +157,14 @@ const App = {
             <div class="auth-widget" id="nav-auth-widget">
               ${isAuth ? `
                 <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;">
-                  <span style="font-weight: 700; color: #1e293b; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${Utils.escapeHtml(user.name || user.email)}
-                  </span>
-                  <span class="badge ${role === 'OFFICER' ? 'badge-warning' : (role === 'ADMIN' || role === 'COMMAND_CENTER' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.68rem; padding: 2px 6px;">
-                    ${role}
-                  </span>
+                  <a href="profile.html" style="text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: 6px;" title="View Profile">
+                    <span style="font-weight: 700; color: #1e293b; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                      ${Utils.escapeHtml(user.name || user.email)}
+                    </span>
+                    <span class="badge ${role === 'OFFICER' ? 'badge-warning' : (role === 'ADMIN' || role === 'COMMAND_CENTER' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.68rem; padding: 2px 6px;">
+                      ${role}
+                    </span>
+                  </a>
                   <button type="button" class="btn btn-sm btn-secondary" onclick="AuthManager.logout()" title="Sign Out" style="padding: 4px 8px; font-size: 0.75rem;">
                     <i data-lucide="log-out" style="width: 13px; height: 13px;"></i>
                   </button>
@@ -123,14 +181,83 @@ const App = {
               <span class="status-dot"></span>
               <span class="status-text" id="system-status-text">Connecting...</span>
             </div>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle Navigation Menu">
+              <i data-lucide="menu" style="width: 22px; height: 22px;"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Drawer Navigation -->
+        <div class="mobile-nav-drawer" id="mobile-nav-drawer">
+          <div class="mobile-nav-header">
+            <div class="mobile-nav-user">
+              ${isAuth ? `
+                <div style="font-weight: 700; color: #1e293b;">${Utils.escapeHtml(user.name || user.email)}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+                  <span class="badge ${role === 'OFFICER' ? 'badge-warning' : (role === 'ADMIN' || role === 'COMMAND_CENTER' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.65rem; padding: 1px 6px;">${role}</span>
+                  ${user.email ? `<span>${Utils.escapeHtml(user.email)}</span>` : ''}
+                </div>
+              ` : `
+                <div style="font-weight: 700; color: #1e293b;">Welcome to NagarSaathi</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Please sign in to report and track issues</div>
+              `}
+            </div>
+            <button class="mobile-nav-close" id="mobile-nav-close" aria-label="Close Navigation Menu">
+              <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+            </button>
+          </div>
+
+          <div class="mobile-nav-body">
+            ${mobileLinksHtml}
+
+            <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+              ${isAuth ? `
+                <button type="button" class="btn btn-secondary w-full" onclick="AuthManager.logout()" style="justify-content: center; gap: 8px;">
+                  <i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Sign Out
+                </button>
+              ` : `
+                <a href="login.html" class="btn btn-primary w-full" style="justify-content: center; gap: 8px;">
+                  <i data-lucide="log-in" style="width: 16px; height: 16px;"></i> Sign In / Register
+                </a>
+              `}
+            </div>
           </div>
         </div>
       </header>
     `;
 
+    this.setupMobileMenu();
+
     if (window.lucide) {
       lucide.createIcons();
     }
+  },
+
+  setupMobileMenu() {
+    const toggleBtn = document.getElementById('mobile-nav-toggle');
+    const closeBtn = document.getElementById('mobile-nav-close');
+    const drawer = document.getElementById('mobile-nav-drawer');
+
+    if (!toggleBtn || !drawer) return;
+
+    toggleBtn.addEventListener('click', () => {
+      drawer.classList.toggle('active');
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        drawer.classList.remove('active');
+      });
+    }
+
+    // Close on navigation link click
+    drawer.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        drawer.classList.remove('active');
+      });
+    });
   },
 
   renderFooter() {

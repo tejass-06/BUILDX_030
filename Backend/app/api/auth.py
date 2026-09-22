@@ -1,15 +1,17 @@
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.security import hash_password, verify_password, create_access_token
 from app.core.dependencies import get_current_user, require_admin
 from app.models.user import User, UserRole
 from app.models.officer import Officer
 from app.models.department import Department
-from app.schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse, OfficerRequestResponse
+from app.schemas.auth import UserRegister, UserLogin, TokenResponse, UserResponse, OfficerRequestResponse, UserUpdate
 from app.services.supabase_service import is_supabase_configured, supabase_sign_up, supabase_sign_in
+from app.services.storage_service import save_evidence_photo
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -38,6 +40,8 @@ def build_user_response(user: User) -> UserResponse:
         role=user.role,
         is_active=user.is_active,
         created_at=user.created_at,
+        profile_photo_url=getattr(user, "profile_photo_url", None),
+        preferred_language=getattr(user, "preferred_language", "en") or "en",
         department_id=dept_id,
         department_code=dept_code,
         department_name=dept_name,
@@ -177,6 +181,42 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 def get_current_user_profile(current_user: User = Depends(get_current_user)):
+    return build_user_response(current_user)
+
+@router.patch("/profile", response_model=UserResponse)
+def update_user_profile(
+    payload: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Allows user to update permitted profile fields (name, phone, preferred_language, profile_photo_url)."""
+    if payload.name is not None and payload.name.strip():
+        current_user.name = payload.name.strip()
+    if payload.phone is not None:
+        current_user.phone = payload.phone.strip()
+    if payload.preferred_language is not None:
+        current_user.preferred_language = payload.preferred_language
+    if payload.profile_photo_url is not None:
+        current_user.profile_photo_url = payload.profile_photo_url
+
+    db.commit()
+    db.refresh(current_user)
+    return build_user_response(current_user)
+
+@router.post("/profile/photo", response_model=UserResponse)
+async def upload_profile_photo(
+    photo: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Uploads profile picture to Supabase Storage and updates user profile."""
+    if not photo or not photo.filename:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No photo file provided")
+    
+    photo_url, _ = await save_evidence_photo(photo, bucket_name="complaint-photos")
+    current_user.profile_photo_url = photo_url
+    db.commit()
+    db.refresh(current_user)
     return build_user_response(current_user)
 
 # ================= ADMIN OFFICER APPROVAL WORKFLOW =================

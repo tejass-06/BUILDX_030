@@ -22,6 +22,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=True) # Nullable when using Supabase Auth
     role = Column(String(50), default=UserRole.CITIZEN.value, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    profile_photo_url = Column(String(500), nullable=True)
+    preferred_language = Column(String(50), default="en", nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 

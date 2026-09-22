@@ -20,6 +20,12 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    preferred_language: Optional[str] = None
+    profile_photo_url: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: int
     name: str
@@ -28,6 +34,8 @@ class UserResponse(BaseModel):
     role: str
     is_active: Optional[bool] = True
     created_at: datetime
+    profile_photo_url: Optional[str] = None
+    preferred_language: Optional[str] = "en"
     department_id: Optional[int] = None
     department_code: Optional[str] = None
     department_name: Optional[str] = None
