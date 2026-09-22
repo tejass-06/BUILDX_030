@@ -15,7 +15,7 @@
 
   <main class="container" style="max-width: 960px; padding-top: 32px; padding-bottom: 60px;">
     <!-- Breadcrumb & Back -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
       <a href="officer.html" class="btn btn-sm btn-secondary">
         <i data-lucide="arrow-left"></i> Back to Officer Queue
       </a>
@@ -24,7 +24,7 @@
 
     <div id="oc-loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading grievance workspace...</p>
+      <p>Loading grievance workspace & AI intelligence package...</p>
     </div>
 
     <div id="oc-content" style="display: none;">
@@ -42,7 +42,7 @@
               Reported on <span id="oc-date">-</span> by <span id="oc-citizen-name">Citizen</span> (<span id="oc-citizen-phone">-</span>)
             </div>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center;" id="oc-status-badges">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;" id="oc-status-badges">
             <!-- Badges -->
           </div>
         </div>
@@ -50,11 +50,47 @@
         <!-- Description Box -->
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: var(--border-radius-sm); margin-bottom: 20px;">
           <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-            Citizen Grievance Description
+            Citizen Grievance Description / Voice Transcript
           </h4>
           <p id="oc-description" style="font-size: 0.95rem; color: #1e293b; line-height: 1.6; margin: 0;">
             -
           </p>
+        </div>
+
+        <!-- AI Internal Intelligence Package (For Officer Operations) -->
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--border-radius-sm); padding: 18px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <div style="background: #2563eb; color: white; width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center;">
+              <i data-lucide="sparkles" style="width: 14px; height: 14px;"></i>
+            </div>
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #1e40af; margin: 0;">
+              AI Internal Intelligence & Redressal Routing
+            </h4>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.85rem;">
+            <div>
+              <span style="color: var(--text-muted); font-weight: 600;">Detected Language:</span>
+              <span id="oc-ai-lang" style="font-weight: 700; color: #1e293b; margin-left: 4px;">English / Marathi</span>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-weight: 600;">Responsible Dept:</span>
+              <span id="oc-ai-dept" style="font-weight: 700; color: #1e293b; margin-left: 4px;">Public Works</span>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-weight: 600;">Severity & Priority:</span>
+              <span id="oc-ai-priority" style="margin-left: 4px;">MEDIUM (P3)</span>
+            </div>
+            <div>
+              <span style="color: var(--text-muted); font-weight: 600;">SLA Window:</span>
+              <span id="oc-ai-sla" style="font-weight: 700; color: var(--primary-color); margin-left: 4px;">24 Hours</span>
+            </div>
+          </div>
+
+          <div id="oc-duplicate-info" style="margin-top: 10px; font-size: 0.85rem; color: #1e40af; border-top: 1px solid #dbeafe; padding-top: 8px;">
+            <i data-lucide="layers" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+            <span id="oc-duplicate-text">Internal Duplicate Check: Unique civic issue registered. No existing active duplicate cluster detected in 50m radius.</span>
+          </div>
         </div>
 
         <!-- Grid: Location Map & Photos -->
@@ -86,14 +122,17 @@
         <!-- Action Workspace Bar -->
         <div style="border-top: 1px solid #e2e8f0; padding-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div style="font-size: 0.85rem; color: var(--text-muted);">
-            Current Status: <b id="oc-current-status-text" style="color: #1e293b;">-</b>
+            Current Operational Status: <b id="oc-current-status-text" style="color: #1e293b;">-</b>
           </div>
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-secondary" id="btn-oc-start-work">
-              <i data-lucide="play"></i> Mark In Progress
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="oc-action-buttons">
+            <button type="button" class="btn btn-secondary" id="btn-oc-acknowledge">
+              <i data-lucide="check"></i> Acknowledge Complaint
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-oc-start-work">
+              <i data-lucide="play"></i> Start Work
             </button>
             <a href="#" id="btn-oc-resolve-link" class="btn btn-success">
-              <i data-lucide="check-circle-2"></i> Proceed to Resolution & Proof →
+              <i data-lucide="check-circle-2"></i> Resolve & Upload Proof →
             </a>
           </div>
         </div>
@@ -110,6 +149,12 @@
   <script src="js/map.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      // RBAC Guard: Officer, Admin, or Command Center
+      if (typeof AuthManager !== 'undefined') {
+        const isAuth = AuthManager.requireAuth(['OFFICER', 'ADMIN', 'COMMAND_CENTER']);
+        if (!isAuth) return;
+      }
+
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
 
@@ -124,7 +169,8 @@
         document.getElementById('oc-loading').style.display = 'none';
         document.getElementById('oc-content').style.display = 'block';
 
-        document.getElementById('oc-id').textContent = `#${data.id.substring(0, 8)}`;
+        const displayId = data.public_id || (data.id ? `NS-${data.id}` : id);
+        document.getElementById('oc-id').textContent = `#${displayId}`;
         document.getElementById('oc-title').textContent = data.title || data.description.substring(0, 70);
         document.getElementById('oc-date').textContent = Utils.formatDate(data.created_at);
         document.getElementById('oc-citizen-name').textContent = data.citizen_name || 'Citizen';
@@ -141,6 +187,17 @@
         `;
 
         document.getElementById('oc-sla-badge').innerHTML = Utils.getSlaBadge(data.sla_deadline, data.status);
+
+        // AI Metadata
+        const deptName = data.department ? (typeof data.department === 'object' ? data.department.name : data.department) : (data.department_code || 'NMC Public Works');
+        document.getElementById('oc-ai-dept').textContent = deptName;
+        document.getElementById('oc-ai-lang').textContent = data.language ? data.language.toUpperCase() : 'Marathi / English';
+        document.getElementById('oc-ai-priority').innerHTML = `${Utils.getPriorityBadge(data.priority)}`;
+        document.getElementById('oc-ai-sla').textContent = `${data.sla_hours || 24} Hours Standard`;
+
+        if (data.parent_complaint_id || data.community_id) {
+          document.getElementById('oc-duplicate-text').innerHTML = `⚠️ <b>Community Issue Cluster:</b> Linked to parent grievance #${data.parent_complaint_id || data.community_id}`;
+        }
 
         // Photo
         if (data.photo_url) {
@@ -160,27 +217,56 @@
         }
 
         // Resolve link
-        document.getElementById('btn-oc-resolve-link').href = `resolution.html?id=${encodeURIComponent(data.id)}&role=officer`;
+        document.getElementById('btn-oc-resolve-link').href = `resolution.html?id=${encodeURIComponent(data.public_id || data.id)}&role=officer`;
 
-        // Start Work action
+        // Action Buttons state management
+        const ackBtn = document.getElementById('btn-oc-acknowledge');
         const startBtn = document.getElementById('btn-oc-start-work');
-        if (data.status === 'IN_PROGRESS' || data.status === 'RESOLVED' || data.status === 'CLOSED') {
-          startBtn.disabled = true;
-          startBtn.textContent = data.status === 'IN_PROGRESS' ? 'Work Currently In Progress' : 'Work Completed';
+
+        if (data.status === 'ACKNOWLEDGED' || data.status === 'IN_PROGRESS' || data.status === 'RESOLVED' || data.status === 'CLOSED') {
+          if (ackBtn) {
+            ackBtn.disabled = true;
+            ackBtn.textContent = '✓ Acknowledged';
+          }
         } else {
-          startBtn.addEventListener('click', async () => {
-            try {
-              startBtn.disabled = true;
-              startBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Updating...';
-              await API.updateComplaintStatus(data.id, 'IN_PROGRESS', 'Field officer started work at site.');
-              Utils.showToast('Grievance marked IN PROGRESS!', 'success');
-              setTimeout(() => window.location.reload(), 1000);
-            } catch (e) {
-              Utils.showToast('Failed to update status: ' + e.message, 'danger');
-              startBtn.disabled = false;
-              startBtn.innerHTML = '<i data-lucide="play"></i> Mark In Progress';
-            }
-          });
+          if (ackBtn) {
+            ackBtn.addEventListener('click', async () => {
+              try {
+                ackBtn.disabled = true;
+                ackBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Acknowledging...';
+                await API.updateComplaintStatus(data.public_id || data.id, 'ACKNOWLEDGED', 'Complaint acknowledged and accepted by assigned officer.');
+                Utils.showToast('Grievance acknowledged! Citizen notified.', 'success');
+                setTimeout(() => window.location.reload(), 800);
+              } catch (e) {
+                Utils.showToast('Failed to acknowledge: ' + e.message, 'danger');
+                ackBtn.disabled = false;
+                ackBtn.innerHTML = '<i data-lucide="check"></i> Acknowledge Complaint';
+              }
+            });
+          }
+        }
+
+        if (data.status === 'IN_PROGRESS' || data.status === 'RESOLVED' || data.status === 'CLOSED') {
+          if (startBtn) {
+            startBtn.disabled = true;
+            startBtn.textContent = data.status === 'IN_PROGRESS' ? 'Work In Progress' : 'Work Completed';
+          }
+        } else {
+          if (startBtn) {
+            startBtn.addEventListener('click', async () => {
+              try {
+                startBtn.disabled = true;
+                startBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Updating...';
+                await API.updateComplaintStatus(data.public_id || data.id, 'IN_PROGRESS', 'Field officer started work on site.');
+                Utils.showToast('Grievance marked IN PROGRESS! Citizen notified.', 'success');
+                setTimeout(() => window.location.reload(), 800);
+              } catch (e) {
+                Utils.showToast('Failed to start work: ' + e.message, 'danger');
+                startBtn.disabled = false;
+                startBtn.innerHTML = '<i data-lucide="play"></i> Start Work';
+              }
+            });
+          }
         }
 
         if (window.lucide) lucide.createIcons();

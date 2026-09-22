@@ -17,6 +17,11 @@ const OfficerDashboard = {
   },
 
   async init() {
+    if (typeof AuthManager !== 'undefined') {
+      const isAuth = AuthManager.requireAuth(['OFFICER', 'ADMIN', 'COMMAND_CENTER']);
+      if (!isAuth) return;
+    }
+
     this.setupListeners();
     await Promise.all([
       this.loadDashboardKPIs(),

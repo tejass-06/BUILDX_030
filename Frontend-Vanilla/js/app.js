@@ -1,6 +1,6 @@
 /**
  * NagarSaathi AI - Global Application Shell
- * Manages unified header/footer, language switching, auth widget, and system status.
+ * Strict Role-Based Navbar Navigation, Header/Footer, Language Switching & System Telemetry.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,11 +23,59 @@ const App = {
     const currentLang = typeof Utils !== 'undefined' ? Utils.getLanguage() : 'en';
     const user = typeof AuthManager !== 'undefined' ? AuthManager.getUser() : null;
     const isAuth = !!user;
+    const role = (user && user.role ? user.role.toUpperCase() : (isAuth ? 'CITIZEN' : 'GUEST'));
+
+    // Dynamic Role-Based Navigation Links
+    let navLinksHtml = '';
+
+    if (role === 'OFFICER') {
+      navLinksHtml = `
+        <a href="officer.html" class="nav-link" data-page="officer">
+          <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i>
+          <span>Officer Desk</span>
+        </a>
+        <a href="tracking.html" class="nav-link" data-page="tracking">
+          <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+          <span>Track Grievance</span>
+        </a>
+      `;
+    } else if (role === 'ADMIN' || role === 'COMMAND_CENTER') {
+      navLinksHtml = `
+        <a href="command-center.html" class="nav-link" data-page="command-center">
+          <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
+          <span>Command Center</span>
+        </a>
+        <a href="officer.html" class="nav-link" data-page="officer">
+          <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i>
+          <span>Officer Desk</span>
+        </a>
+        <a href="citizen.html" class="nav-link" data-page="citizen">
+          <i data-lucide="home" style="width: 16px; height: 16px;"></i>
+          <span>Citizen Portal</span>
+        </a>
+      `;
+    } else {
+      // Citizen or Guest Navigation (NEVER expose Officer Desk or Command Center)
+      navLinksHtml = `
+        <a href="citizen.html" class="nav-link" data-page="citizen">
+          <i data-lucide="home" style="width: 16px; height: 16px;"></i>
+          <span data-i18n="citizen_home">Citizen Home</span>
+        </a>
+        <a href="report.html" class="nav-link" data-page="report">
+          <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
+          <span data-i18n="report_problem">Report Problem</span>
+        </a>
+        <a href="tracking.html" class="nav-link" data-page="tracking">
+          <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+          <span data-i18n="track_status">Track Status</span>
+        </a>
+      `;
+    }
 
     headerContainer.innerHTML = `
       <header class="navbar">
         <div class="navbar-container">
-          <a href="index.html" class="brand">
+          <a href="${isAuth ? (role === 'OFFICER' ? 'officer.html' : (role === 'ADMIN' ? 'command-center.html' : 'citizen.html')) : 'index.html'}" class="brand">
             <div class="brand-logo-icon">
               <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
             </div>
@@ -38,26 +86,7 @@ const App = {
           </a>
 
           <nav class="nav-links" id="nav-links">
-            <a href="citizen.html" class="nav-link" data-page="citizen">
-              <i data-lucide="home" style="width: 16px; height: 16px;"></i>
-              <span data-i18n="citizen_home">Citizen Portal</span>
-            </a>
-            <a href="report.html" class="nav-link" data-page="report">
-              <i data-lucide="plus-circle" style="width: 16px; height: 16px;"></i>
-              <span data-i18n="report_problem">Report Problem</span>
-            </a>
-            <a href="tracking.html" class="nav-link" data-page="tracking">
-              <i data-lucide="search" style="width: 16px; height: 16px;"></i>
-              <span data-i18n="track_status">Track Status</span>
-            </a>
-            <a href="officer.html" class="nav-link" data-page="officer">
-              <i data-lucide="briefcase" style="width: 16px; height: 16px;"></i>
-              <span>Officer Desk</span>
-            </a>
-            <a href="command-center.html" class="nav-link" data-page="command-center">
-              <i data-lucide="activity" style="width: 16px; height: 16px;"></i>
-              <span>Command Center</span>
-            </a>
+            ${navLinksHtml}
           </nav>
 
           <div class="nav-actions">
@@ -72,9 +101,11 @@ const App = {
             <div class="auth-widget" id="nav-auth-widget">
               ${isAuth ? `
                 <div style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;">
-                  <span style="font-weight: 700; color: #1e293b; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${Utils.escapeHtml(user.name || user.email)}</span>
-                  <span class="badge ${user.role === 'OFFICER' ? 'badge-warning' : (user.role === 'ADMIN' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.68rem; padding: 2px 6px;">
-                    ${user.role || 'CITIZEN'}
+                  <span style="font-weight: 700; color: #1e293b; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    ${Utils.escapeHtml(user.name || user.email)}
+                  </span>
+                  <span class="badge ${role === 'OFFICER' ? 'badge-warning' : (role === 'ADMIN' || role === 'COMMAND_CENTER' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.68rem; padding: 2px 6px;">
+                    ${role}
                   </span>
                   <button type="button" class="btn btn-sm btn-secondary" onclick="AuthManager.logout()" title="Sign Out" style="padding: 4px 8px; font-size: 0.75rem;">
                     <i data-lucide="log-out" style="width: 13px; height: 13px;"></i>
@@ -127,8 +158,7 @@ const App = {
               <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
                 <li><a href="citizen.html" style="color: var(--text-muted); text-decoration: none;">Citizen Grievance Redressal</a></li>
                 <li><a href="report.html" style="color: var(--text-muted); text-decoration: none;">Voice & Multimodal Reporting</a></li>
-                <li><a href="officer.html" style="color: var(--text-muted); text-decoration: none;">NMC Officer Resolution Workspace</a></li>
-                <li><a href="command-center.html" style="color: var(--text-muted); text-decoration: none;">Citywide Command & Analytics</a></li>
+                <li><a href="tracking.html" style="color: var(--text-muted); text-decoration: none;">Live Grievance Tracking</a></li>
               </ul>
             </div>
 
@@ -145,7 +175,7 @@ const App = {
 
           <div class="footer-bottom">
             <div>© ${new Date().getFullYear()} NagarSaathi AI • Nagpur Smart City Mission</div>
-            <div>Primary Production Frontend • Zero Dependency Vanilla Stack</div>
+            <div>Production Vanilla Frontend • Zero External UI Framework Dependency</div>
           </div>
         </div>
       </footer>
@@ -157,61 +187,59 @@ const App = {
   },
 
   setupLanguageSwitcher() {
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('.lang-btn');
-      if (btn && btn.dataset.lang) {
-        const lang = btn.dataset.lang;
+    const buttons = document.querySelectorAll('.lang-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const lang = e.target.dataset.lang;
         if (typeof Utils !== 'undefined') {
           Utils.setLanguage(lang);
+          buttons.forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+          this.applyTranslations();
         }
+      });
+    });
+  },
 
-        document.querySelectorAll('.lang-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.lang === lang);
-        });
-
-        // Trigger i18n update on all [data-i18n] elements
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-          const key = el.dataset.i18n;
-          const translated = typeof Utils !== 'undefined' ? Utils.t(key) : key;
-          if (translated) el.textContent = translated;
-        });
-
-        if (typeof Utils !== 'undefined') {
-          Utils.showToast(`Language switched to ${lang.toUpperCase()}`, 'info');
-        }
+  applyTranslations() {
+    if (typeof Utils === 'undefined') return;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.dataset.i18n;
+      const trans = Utils.t(key);
+      if (trans && trans !== key) {
+        el.textContent = trans;
       }
     });
   },
 
   async checkSystemHealth() {
-    const dot = document.querySelector('.status-dot');
+    const indicator = document.getElementById('system-status-indicator');
     const text = document.getElementById('system-status-text');
-    if (!dot || !text) return;
+    if (!indicator || !text) return;
 
     try {
-      const health = await API.getHealth();
-      if (health && (health.status === 'healthy' || health.status === 'ok')) {
-        dot.style.background = '#10b981';
-        text.textContent = 'Backend: ● Connected';
-        text.style.color = '#047857';
-      } else {
-        dot.style.background = '#ef4444';
-        text.textContent = 'Backend: ● Offline';
-        text.style.color = '#b91c1c';
+      if (typeof API !== 'undefined') {
+        const health = await API.getHealth();
+        if (health.status === 'healthy' || health.status === 'ok') {
+          indicator.className = 'status-indicator online';
+          text.textContent = 'NMC Live';
+        } else {
+          indicator.className = 'status-indicator offline';
+          text.textContent = 'Degraded';
+        }
       }
-    } catch (e) {
-      dot.style.background = '#ef4444';
-      text.textContent = 'Backend: ● Offline';
-      text.style.color = '#b91c1c';
+    } catch {
+      indicator.className = 'status-indicator offline';
+      text.textContent = 'Offline';
     }
   },
 
   highlightActiveNav() {
-    const path = window.location.pathname;
-    const page = path.split('/').pop().replace('.html', '') || 'index';
-
+    const currentPath = window.location.pathname;
+    const page = currentPath.split('/').pop() || 'index.html';
+    
     document.querySelectorAll('.nav-link').forEach(link => {
-      if (link.dataset.page === page || (page === 'index' && link.dataset.page === 'citizen')) {
+      const href = link.getAttribute('href');
+      if (href && (href === page || (page === '' && href === 'index.html'))) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');

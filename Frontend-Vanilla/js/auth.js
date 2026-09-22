@@ -1,11 +1,22 @@
 /**
  * NagarSaathi AI - Centralized Authentication & Session Management
- * Handles Citizen & Officer Signup, Login, RBAC Route Guards, and Session Persistence.
+ * Strict Role-Based Access Control (RBAC):
+ * Roles: CITIZEN, OFFICER, COMMAND_CENTER / ADMIN
  */
 
 class AuthManager {
   static TOKEN_KEY = 'nagarsaathi_access_token';
   static USER_KEY = 'nagarsaathi_user';
+
+  /**
+   * Determine primary dashboard URL based on role
+   */
+  static getRoleDashboardUrl(role) {
+    const r = (role || '').toUpperCase().trim();
+    if (r === 'OFFICER') return 'officer.html';
+    if (r === 'ADMIN' || r === 'COMMAND_CENTER') return 'command-center.html';
+    return 'citizen.html';
+  }
 
   /**
    * Register a new Citizen or submit an Officer Registration Request
@@ -120,21 +131,36 @@ class AuthManager {
   }
 
   /**
-   * Route Guard: Enforce authentication and allowed roles
+   * If user is already authenticated on auth pages (login/signup), redirect to their role dashboard
+   */
+  static redirectIfAuthenticated() {
+    if (this.isAuthenticated()) {
+      const role = this.getRole();
+      window.location.href = this.getRoleDashboardUrl(role);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Route Guard: Enforce authentication and role permissions
    */
   static requireAuth(allowedRoles = []) {
     if (!this.isAuthenticated()) {
-      const currentUrl = encodeURIComponent(window.location.pathname + window.location.search);
+      const currentUrl = encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search);
       window.location.href = `login.html?redirect=${currentUrl}`;
       return false;
     }
 
     if (allowedRoles.length > 0) {
       const currentRole = this.getRole();
-      const hasPermission = allowedRoles.includes(currentRole) || currentRole === 'ADMIN';
+      const rolesUpper = allowedRoles.map(r => r.toUpperCase());
+      const hasPermission = rolesUpper.includes(currentRole) || currentRole === 'ADMIN';
+
       if (!hasPermission) {
-        alert(`Access Denied: Your account role (${currentRole}) does not have permission to view this page.`);
-        window.location.href = 'index.html';
+        console.warn(`[RBAC] Access Denied: User role ${currentRole} cannot access this resource.`);
+        // Redirect directly to their own dashboard
+        window.location.href = this.getRoleDashboardUrl(currentRole);
         return false;
       }
     }

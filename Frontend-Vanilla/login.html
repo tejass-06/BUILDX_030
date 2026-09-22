@@ -107,6 +107,11 @@
   <script src="js/app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Auto-redirect if already authenticated
+      if (typeof AuthManager !== 'undefined' && AuthManager.redirectIfAuthenticated()) {
+        return;
+      }
+
       let selectedPortal = 'citizen';
 
       const tabs = document.querySelectorAll('.auth-tab');
@@ -147,21 +152,25 @@
           const result = await AuthManager.login(email, password);
           Utils.showToast(`Welcome back, ${result.user.name}!`, 'success');
 
-          // Check redirect or route by role
+          const role = (result.user.role || 'CITIZEN').toUpperCase();
           const params = new URLSearchParams(window.location.search);
           const redirect = params.get('redirect');
 
+          // Check if redirect is authorized for this role
           if (redirect) {
-            window.location.href = decodeURIComponent(redirect);
-          } else {
-            const role = (result.user.role || '').toUpperCase();
-            if (role === 'OFFICER') {
-              window.location.href = 'officer.html';
-            } else if (role === 'ADMIN' || role === 'COMMAND_CENTER') {
-              window.location.href = 'command-center.html';
-            } else {
+            const decoded = decodeURIComponent(redirect);
+            const isOfficerPage = decoded.includes('officer');
+            const isAdminPage = decoded.includes('command-center');
+
+            if (role === 'CITIZEN' && (isOfficerPage || isAdminPage)) {
               window.location.href = 'citizen.html';
+            } else if (role === 'OFFICER' && isAdminPage) {
+              window.location.href = 'officer.html';
+            } else {
+              window.location.href = decoded;
             }
+          } else {
+            window.location.href = AuthManager.getRoleDashboardUrl(role);
           }
         } catch (err) {
           errorText.textContent = err.message;

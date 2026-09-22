@@ -13,6 +13,11 @@ const CommandCenter = {
   conflictsData: [],
 
   async init() {
+    if (typeof AuthManager !== 'undefined') {
+      const isAuth = AuthManager.requireAuth(['ADMIN', 'COMMAND_CENTER']);
+      if (!isAuth) return;
+    }
+
     this.setupListeners();
     this.initMap();
     await Promise.all([

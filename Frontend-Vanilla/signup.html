@@ -158,6 +158,10 @@
   <script src="js/app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      if (typeof AuthManager !== 'undefined' && AuthManager.redirectIfAuthenticated()) {
+        return;
+      }
+
       let currentType = 'citizen';
 
       const tabs = document.querySelectorAll('.auth-tab');
