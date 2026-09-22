@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base, get_db
 from app.core.config import settings
+import app.models  # Ensure all SQLAlchemy models are registered on Base
 from app.db.seed import init_db, seed_demo_data
 from app.main import app
 

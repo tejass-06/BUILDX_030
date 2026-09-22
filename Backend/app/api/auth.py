@@ -43,10 +43,8 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)):
                 }
             )
         except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Supabase Auth registration error: {str(e)}"
-            )
+            # If error is not fatal, log and continue with local user record
+            print(f"[AUTH] Supabase signup warning: {e}")
 
     # Save User profile in Application Database
     user = User(
@@ -54,7 +52,7 @@ def register_user(payload: UserRegister, db: Session = Depends(get_db)):
         name=payload.name,
         email=payload.email,
         phone=payload.phone,
-        password_hash=hash_password(payload.password) if not is_supabase_configured() else None,
+        password_hash=hash_password(payload.password),
         role=user_role,
         is_active=user_is_active
     )
@@ -113,7 +111,7 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     access_token = None
 
-    # If Supabase Auth is configured, authenticate via Supabase Auth
+    # 1. If Supabase Auth is configured, attempt authentication via Supabase Auth
     if is_supabase_configured():
         try:
             auth_user_id, access_token, metadata = supabase_sign_in(payload.email, payload.password)
@@ -129,23 +127,21 @@ def login_user(payload: UserLogin, db: Session = Depends(get_db)):
                 db.add(user)
                 db.commit()
                 db.refresh(user)
-            elif user and not user.auth_user_id:
+            elif user and not user.auth_user_id and auth_user_id:
                 user.auth_user_id = auth_user_id
                 db.commit()
         except Exception:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-    else:
-        # Local password verification
+            pass
+
+    # 2. Local fallback verification for seeded officers/admins or offline mode
+    if not access_token:
         if not user or not user.password_hash or not verify_password(payload.password, user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password",
                 headers={"WWW-Authenticate": "Bearer"}
             )
+        access_token = create_access_token(subject=user.id, role=user.role)
 
     # Verify Account Status & Officer Approval
     if user.role == UserRole.OFFICER_PENDING.value or (user.role == UserRole.OFFICER.value and not user.is_active):

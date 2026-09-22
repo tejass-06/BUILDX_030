@@ -42,11 +42,23 @@ def supabase_sign_up(email: str, password: str, metadata: Optional[Dict[str, Any
             "password": password,
             "options": options
         })
-        if res.user:
+        if res and res.user:
             auth_user_id = str(res.user.id)
             access_token = res.session.access_token if res.session else None
             return auth_user_id, access_token
     except Exception as e:
+        # If user is already registered in Supabase Auth, attempt sign-in to retrieve existing auth user & token
+        if "already registered" in str(e).lower() or "already exists" in str(e).lower() or "unique" in str(e).lower():
+            try:
+                sign_in_res = client.auth.sign_in_with_password({
+                    "email": email,
+                    "password": password
+                })
+                if sign_in_res and sign_in_res.user:
+                    auth_token = sign_in_res.session.access_token if sign_in_res.session else None
+                    return str(sign_in_res.user.id), auth_token
+            except Exception:
+                pass
         raise e
     return None, None
 
