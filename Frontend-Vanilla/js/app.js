@@ -190,16 +190,19 @@ const App = {
 
     try {
       const health = await API.getHealth();
-      if (health && health.status === 'healthy') {
+      if (health && (health.status === 'healthy' || health.status === 'ok')) {
         dot.style.background = '#10b981';
-        text.textContent = 'Backend Online';
+        text.textContent = 'Backend: ● Connected';
+        text.style.color = '#047857';
       } else {
-        dot.style.background = '#f59e0b';
-        text.textContent = 'Backend Degraded';
+        dot.style.background = '#ef4444';
+        text.textContent = 'Backend: ● Offline';
+        text.style.color = '#b91c1c';
       }
     } catch (e) {
       dot.style.background = '#ef4444';
-      text.textContent = 'Offline (127.0.0.1:8000)';
+      text.textContent = 'Backend: ● Offline';
+      text.style.color = '#b91c1c';
     }
   },
 
