@@ -68,7 +68,8 @@ Build verification passes cleanly with TypeScript checks and production asset bu
 
 ### Backend Setup & Running
 ```bash
-# 1. Install Python dependencies
+# 1. Navigate to backend & install dependencies
+cd Backend
 pip install -r requirements.txt
 
 # 2. Configure environment
@@ -84,7 +85,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ### Automated Test Suite
 ```bash
+cd Backend
 python -m pytest -v
 ```
 All 21 unit and integration test suites pass 100%.
+
 

@@ -30,15 +30,28 @@ Thumbs.db
 # Python & Backend
 .venv/
 venv/
+Backend/.venv/
+Backend/venv/
 __pycache__/
+Backend/**/__pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+Backend/.pytest_cache/
 *.db
 *.sqlite
 nagar_saathi.db
 test_nagar_saathi.db
+Backend/*.db
+Backend/*.sqlite
 scratch/
+Backend/scratch/
 uploads/*
 !uploads/.gitkeep
+Backend/uploads/*
+!Backend/uploads/.gitkeep
+Backend/.env
+Backend/.env.*
+!Backend/.env.example
+
 
