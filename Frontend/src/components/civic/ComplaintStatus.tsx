@@ -1,6 +1,6 @@
 import React from 'react';
 import { StatusBadge } from '../ui/StatusBadge';
-import { ComplaintStatus as ComplaintStatusType } from '../../types';
+import type { ComplaintStatus as ComplaintStatusType } from '../../types';
 
 export interface ComplaintStatusProps {
   status: ComplaintStatusType;

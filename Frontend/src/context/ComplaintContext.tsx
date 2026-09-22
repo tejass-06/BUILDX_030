@@ -65,6 +65,7 @@ interface ComplaintContextType {
   updateResolutionEvidence: (id: string, evidence: Partial<ResolutionEvidenceData>) => void;
   closeComplaint: (id: string, rating?: number) => void;
   reopenComplaint: (id: string, reason: string) => void;
+  updateConflictStatus: (id: string, status: 'active' | 'mitigated' | 'resolved') => void;
   assignComplaint: (id: string, officerId: string, departmentCode: string) => void;
   addComplaint: (complaint: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt'>) => string;
 }
@@ -76,7 +77,7 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
   const [departments] = useState<DepartmentData[]>(mockDepartments);
   const [officers] = useState<OfficerData[]>(mockOfficers);
   const [hotspots] = useState<HotspotData[]>(mockHotspots);
-  const [conflicts] = useState<DepartmentConflictData[]>(mockDepartmentConflicts);
+  const [conflicts, setConflicts] = useState<DepartmentConflictData[]>(mockDepartmentConflicts);
   const [activeLanguage, setActiveLanguage] = useState<SupportedLanguage>('en');
   const [reportDraft, setReportDraft] = useState<ReportDraft>({
     ...defaultReportDraft,
@@ -228,6 +229,12 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
     );
   };
 
+  const updateConflictStatus = (id: string, status: 'active' | 'mitigated' | 'resolved') => {
+    setConflicts((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, status } : c))
+    );
+  };
+
   const assignComplaint = (id: string, officerId: string, departmentCode: string) => {
     const officer = officers.find((o) => o.id === officerId);
     const dept = departments.find((d) => d.code === departmentCode);
@@ -281,6 +288,7 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
         updateResolutionEvidence,
         closeComplaint,
         reopenComplaint,
+        updateConflictStatus,
         assignComplaint,
         addComplaint,
       }}

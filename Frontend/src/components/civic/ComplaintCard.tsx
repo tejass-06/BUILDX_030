@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, ChevronRight } from 'lucide-react';
-import { Complaint } from '../../types';
+import type { Complaint } from '../../types';
 import { Card } from '../ui/Card';
 import { ComplaintStatus } from './ComplaintStatus';
 import { SLAIndicator } from './SLAIndicator';
