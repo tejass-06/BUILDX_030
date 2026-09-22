@@ -175,6 +175,9 @@ async def create_complaint(
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
     address: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    citizen_name: Optional[str] = Form(None),
+    citizen_phone: Optional[str] = Form(None),
     photo: Optional[UploadFile] = File(None),
     current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
