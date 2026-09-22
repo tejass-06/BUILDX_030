@@ -91,18 +91,29 @@ async def submit_officer_resolution(
             ws_complaint_public_id=complaint.public_id
         )
 
-    # 5. Broadcast WebSocket Event
+    # 5. Broadcast WebSocket Events
+    status_payload = {
+        "complaint_id": complaint.id,
+        "public_id": complaint.public_id,
+        "status": complaint.status,
+        "updated_at": complaint.updated_at.isoformat() if complaint.updated_at else datetime.now(timezone.utc).isoformat(),
+        "resolution_note": resolution_note,
+        "after_photo_url": after_photo_url,
+        "ai_verification": ai_verify
+    }
+    await ws_manager.broadcast_to_complaint(
+        complaint_id=complaint.public_id,
+        event="COMPLAINT_STATUS_UPDATED",
+        data=status_payload
+    )
     await ws_manager.broadcast_to_complaint(
         complaint_id=complaint.public_id,
         event="resolution_submitted",
-        data={
-            "complaint_id": complaint.id,
-            "public_id": complaint.public_id,
-            "status": complaint.status,
-            "resolution_note": resolution_note,
-            "after_photo_url": after_photo_url,
-            "ai_verification": ai_verify
-        }
+        data=status_payload
+    )
+    await ws_manager.broadcast_global(
+        event="COMPLAINT_STATUS_UPDATED",
+        data=status_payload
     )
 
     return resolution
@@ -188,17 +199,28 @@ async def process_citizen_verification(
     )
 
     # Broadcast WebSocket
+    verify_payload = {
+        "complaint_id": complaint.id,
+        "public_id": complaint.public_id,
+        "status": complaint.status,
+        "updated_at": complaint.updated_at.isoformat() if complaint.updated_at else datetime.now(timezone.utc).isoformat(),
+        "result": result.value,
+        "rating": rating,
+        "feedback": feedback
+    }
+    await ws_manager.broadcast_to_complaint(
+        complaint_id=complaint.public_id,
+        event="COMPLAINT_STATUS_UPDATED",
+        data=verify_payload
+    )
     await ws_manager.broadcast_to_complaint(
         complaint_id=complaint.public_id,
         event=event_name,
-        data={
-            "complaint_id": complaint.id,
-            "public_id": complaint.public_id,
-            "status": complaint.status,
-            "result": result.value,
-            "rating": rating,
-            "feedback": feedback
-        }
+        data=verify_payload
+    )
+    await ws_manager.broadcast_global(
+        event="COMPLAINT_STATUS_UPDATED",
+        data=verify_payload
     )
 
     return verification

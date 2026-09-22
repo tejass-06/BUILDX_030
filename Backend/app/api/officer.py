@@ -192,13 +192,24 @@ async def update_complaint_status(
 @router.post("/complaints/{complaint_id}/resolve", response_model=ComplaintDetailResponse)
 async def resolve_complaint(
     complaint_id: str,
-    resolution_note: str = Form(...),
+    resolution_note: Optional[str] = Form(None),
+    resolution_notes: Optional[str] = Form(None),
+    action_taken: Optional[str] = Form(None),
+    note: Optional[str] = Form(None),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
     after_photo: Optional[UploadFile] = File(None),
+    photo: Optional[UploadFile] = File(None),
     auth_data: tuple[User, Optional[Officer]] = Depends(require_officer),
     db: Session = Depends(get_db)
 ):
+    final_note = resolution_note or resolution_notes or action_taken or note
+    if not final_note:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Resolution note is required to resolve a complaint"
+        )
+
     current_user, officer = auth_data
     if not officer:
         # If admin without officer record, grab or create default officer
@@ -220,15 +231,16 @@ async def resolve_complaint(
 
     verify_officer_department_access(complaint, current_user, officer)
 
+    target_photo = after_photo or photo
     after_photo_url = None
-    if after_photo and after_photo.filename:
-        after_photo_url, _ = await save_evidence_photo(after_photo, bucket_name=settings.SUPABASE_STORAGE_BUCKET_RESOLUTIONS)
+    if target_photo and target_photo.filename:
+        after_photo_url, _ = await save_evidence_photo(target_photo, bucket_name=settings.SUPABASE_STORAGE_BUCKET_RESOLUTIONS)
 
     await submit_officer_resolution(
         db=db,
         complaint=complaint,
         officer=officer,
-        resolution_note=resolution_note,
+        resolution_note=final_note,
         after_photo_url=after_photo_url,
         latitude=latitude,
         longitude=longitude

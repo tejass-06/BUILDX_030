@@ -347,11 +347,20 @@ async def verify_complaint(
     if not complaint:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Complaint not found")
 
+    verify_result = payload.result
+    if verify_result is None:
+        if payload.satisfied is True:
+            verify_result = VerificationResult.FIXED
+        elif payload.satisfied is False:
+            verify_result = VerificationResult.NOT_FIXED
+        else:
+            verify_result = VerificationResult.FIXED
+
     await process_citizen_verification(
         db=db,
         complaint=complaint,
         citizen=current_user,
-        result=payload.result,
+        result=verify_result,
         rating=payload.rating,
         feedback=payload.feedback,
         reopen_reason=payload.reopen_reason
