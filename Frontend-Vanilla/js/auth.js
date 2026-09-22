@@ -152,13 +152,20 @@ class AuthManager {
       return false;
     }
 
-    if (allowedRoles.length > 0) {
+    // Robust normalization for allowedRoles: handles string, array, null, undefined
+    const roles = Array.isArray(allowedRoles)
+      ? allowedRoles
+      : (typeof allowedRoles === 'string' && allowedRoles.trim().length > 0)
+        ? [allowedRoles.trim()]
+        : [];
+
+    if (roles.length > 0) {
       const currentRole = this.getRole();
-      const rolesUpper = allowedRoles.map(r => r.toUpperCase());
+      const rolesUpper = roles.map(r => String(r).toUpperCase().trim());
       const hasPermission = rolesUpper.includes(currentRole) || currentRole === 'ADMIN';
 
       if (!hasPermission) {
-        console.warn(`[RBAC] Access Denied: User role ${currentRole} cannot access this resource.`);
+        console.warn(`[RBAC] Access Denied: User role '${currentRole}' cannot access this resource (Allowed: ${rolesUpper.join(', ')}).`);
         // Redirect directly to their own dashboard
         window.location.href = this.getRoleDashboardUrl(currentRole);
         return false;

@@ -22,7 +22,7 @@ const ReportController = {
   async init() {
     // 1. Enforce Authentication Guard
     if (typeof AuthManager !== 'undefined') {
-      const isAuth = AuthManager.requireAuth('CITIZEN');
+      const isAuth = AuthManager.requireAuth(['CITIZEN']);
       if (!isAuth) return;
 
       // Auto-fill logged-in citizen details if available
@@ -30,7 +30,7 @@ const ReportController = {
       if (user) {
         const nameInput = document.getElementById('citizen-name');
         const phoneInput = document.getElementById('citizen-phone');
-        if (nameInput && user.full_name) nameInput.value = user.full_name;
+        if (nameInput && (user.name || user.full_name)) nameInput.value = user.name || user.full_name;
         if (phoneInput && user.phone) phoneInput.value = user.phone;
       }
     }
