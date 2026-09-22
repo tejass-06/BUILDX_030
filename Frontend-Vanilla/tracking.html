@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Grievance Status • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container" style="max-width: 860px; padding-top: 32px; padding-bottom: 60px;">
+    <!-- Search Bar Card -->
+    <div class="card" style="margin-bottom: 24px; padding: 20px 24px;">
+      <form id="tracking-search-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 260px; position: relative;">
+          <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+          <input 
+            type="text" 
+            id="tracking-search-input" 
+            class="form-control" 
+            placeholder="Enter Complaint ID (e.g. e220b33b-8219-4bc5-a128-48b594b292e9)..." 
+            style="padding-left: 42px;"
+            required
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="search"></i> Track
+        </button>
+      </form>
+    </div>
+
+    <!-- Main Dynamic Content (Timeline, Details, SLA, WhatsApp, Actions) -->
+    <div id="tracking-main-content">
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading grievance status...</p>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/websocket.js"></script>
+  <script src="js/tracking.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

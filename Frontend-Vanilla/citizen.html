@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citizen Home • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container" style="padding-top: 32px; padding-bottom: 60px;">
+    <!-- Citizen Hero Banner -->
+    <div class="card" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; margin-bottom: 32px; padding: 36px 32px; border: none;">
+      <div style="max-width: 680px;">
+        <div style="display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.5px;">
+          NAGPUR MUNICIPAL CITIZEN PORTAL
+        </div>
+        <h1 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">
+          Smarter Citizens. Cleaner Cities.<br>A Better Nagpur.
+        </h1>
+        <p style="font-size: 1rem; opacity: 0.9; margin-bottom: 24px; line-height: 1.5;">
+          Voice your civic grievances in Marathi, Hindi, or English. AI automatically assigns the right NMC department with guaranteed SLA response times.
+        </p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <a href="report.html" class="btn" style="background: white; color: #1e40af; font-weight: 700;">
+            <i data-lucide="plus-circle"></i> Report a Civic Problem
+          </a>
+          <a href="tracking.html" class="btn" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">
+            <i data-lucide="search"></i> My Complaints
+          </a>
+          <a href="command-center.html" class="btn" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3);">
+            <i data-lucide="map"></i> City Map
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Search Bar -->
+    <div class="card" style="margin-bottom: 32px; padding: 18px 24px;">
+      <form id="citizen-search-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 260px; position: relative;">
+          <i data-lucide="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+          <input 
+            type="text" 
+            id="search-complaint-id" 
+            class="form-control" 
+            placeholder="Search complaint by ID (e.g. 84df2a87)..." 
+            style="padding-left: 42px;"
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="arrow-right"></i> Track Grievance
+        </button>
+      </form>
+    </div>
+
+    <!-- Live City Statistics -->
+    <section style="margin-bottom: 40px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b;">City Civic Performance</h3>
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Real-time NMC telemetry</span>
+      </div>
+      <div class="grid grid-4" id="citizen-stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Total Grievances</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">SLA Compliance</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Complaints Feed -->
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b;">Recent Civic Grievances</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">Live updates from Nagpur zones</p>
+        </div>
+        <a href="report.html" class="btn btn-sm btn-primary">
+          <i data-lucide="plus"></i> New Report
+        </a>
+      </div>
+
+      <div class="grid grid-3" id="citizen-complaints-list">
+        <!-- Loaded via citizen.js -->
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Fetching grievances from NMC Registry...</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/citizen.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

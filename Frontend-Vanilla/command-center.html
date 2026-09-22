@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command & Control Center • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container" style="padding-top: 32px; padding-bottom: 60px;">
+    <!-- Command Center Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="badge badge-primary" style="margin-bottom: 6px;">NMC Citywide Operations</div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin: 0;">
+          Municipal Command & Analytics Center
+        </h1>
+      </div>
+      <button class="btn btn-secondary" id="btn-cc-refresh">
+        <i data-lucide="refresh-cw"></i> Refresh Telemetry
+      </button>
+    </div>
+
+    <!-- Citywide KPI Telemetry Cards -->
+    <section style="margin-bottom: 32px;">
+      <div class="grid grid-5" id="cc-kpi-grid">
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Total Grievances</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Resolved & Closed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Active / In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Urgent / High Priority</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">SLA Compliance</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hotspot Map & GIS Section -->
+    <section style="margin-bottom: 32px;">
+      <div class="card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
+              GIS Civic Hotspot Map & Infrastructure Conflicts
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">
+              Live density clusters and cross-department road excavation conflicts across Nagpur.
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="cc-filter-category" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Layer:</label>
+            <select id="cc-filter-category" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">
+              <option value="">All Categories</option>
+              <option value="WATER_LEAKAGE">Water Leakage</option>
+              <option value="POTHOLE">Potholes & Roads</option>
+              <option value="GARBAGE">Garbage & Sanitation</option>
+              <option value="DRAINAGE">Drainage / Sewage</option>
+              <option value="STREETLIGHT">Streetlights</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Leaflet Map Container -->
+        <div id="cc-hotspot-map" class="map-container" style="height: 420px;"></div>
+      </div>
+    </section>
+
+    <!-- Cross-Department Conflicts & Chronic Recurring Failures -->
+    <section class="grid grid-2" style="margin-bottom: 32px;">
+      <!-- Department Conflict Detector -->
+      <div class="card">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+          <i data-lucide="alert-triangle" style="color: var(--danger); width: 20px; height: 20px;"></i>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+            Infrastructure Work Conflicts
+          </h3>
+        </div>
+        <div id="cc-conflicts-container">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Analyzing cross-department excavation overlaps...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chronic Failure Clusters -->
+      <div class="card">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+          <i data-lucide="repeat" style="color: var(--warning); width: 20px; height: 20px;"></i>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">
+            Chronic Infrastructure Failures
+          </h3>
+        </div>
+        <div id="cc-recurring-container">
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Scanning 30-day chronic recurrence patterns...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Zone SLA Performance Table -->
+    <section>
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">NMC Zone Redressal Performance</h3>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Real-time ward telemetry</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Zone / Ward</th>
+                <th>Total Reports</th>
+                <th>Resolved</th>
+                <th>Active</th>
+                <th>SLA Compliance</th>
+              </tr>
+            </thead>
+            <tbody id="cc-zone-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; padding: 24px;">
+                  <div class="spinner" style="margin: 0 auto 8px auto;"></div>
+                  <div style="color: var(--text-muted);">Loading zone statistics...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/command-center.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

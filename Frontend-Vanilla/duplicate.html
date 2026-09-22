@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Duplicate Check • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container" style="max-width: 760px; padding-top: 32px; padding-bottom: 60px;">
+    <!-- Stepper Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--success);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--success); color: white; display: grid; place-items: center; font-size: 0.85rem;">✓</span>
+        <span>Reported</span>
+      </div>
+      <div style="flex: 1; height: 2px; background: var(--success); margin: 0 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--success);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--success); color: white; display: grid; place-items: center; font-size: 0.85rem;">✓</span>
+        <span>AI Verified</span>
+      </div>
+      <div style="flex: 1; height: 2px; background: var(--primary-color); margin: 0 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary-color);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-color); color: white; display: grid; place-items: center; font-size: 0.85rem;">3</span>
+        <span>Duplicates</span>
+      </div>
+      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">4</span>
+        <span>Track</span>
+      </div>
+    </div>
+
+    <!-- Duplicate Checking Loading -->
+    <div id="dup-loading-state" class="card" style="padding: 48px 32px; text-align: center;">
+      <div class="spinner" style="margin: 0 auto 20px auto; width: 44px; height: 44px; border-width: 4px;"></div>
+      <h3 style="font-size: 1.3rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+        Checking nearby reports...
+      </h3>
+      <p style="font-size: 0.95rem; color: var(--text-muted); max-width: 440px; margin: 0 auto;">
+        Analyzing 300m geographic vicinity and civic similarity vectors to prevent duplicate tickets.
+      </p>
+    </div>
+
+    <!-- Content State -->
+    <div id="dup-content-state" class="card" style="display: none; padding: 28px;">
+      <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px;">
+        <h2 id="dup-header-title" style="font-size: 1.35rem; font-weight: 800; color: #1e293b; margin-bottom: 6px;">
+          Duplicate Check
+        </h2>
+        <p id="dup-header-subtitle" style="font-size: 0.9rem; color: var(--text-muted);">
+          Review matching grievances found in your area.
+        </p>
+      </div>
+
+      <!-- Duplicates List / Empty State -->
+      <div id="dup-list-container" style="margin-bottom: 24px;"></div>
+
+      <!-- Action Footer -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+        <button type="button" class="btn btn-secondary" id="btn-back-ai">
+          <i data-lucide="arrow-left"></i> Back to AI Analysis
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-report-separately">
+          <i data-lucide="plus-circle"></i> Report Separately
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/duplicate.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

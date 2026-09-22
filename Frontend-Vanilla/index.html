@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NagarSaathi AI - Smart Civic Governance Portal</title>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <div id="app-header"></div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main Hero -->
+  <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+    <section style="text-align: center; max-width: 800px; margin: 0 auto 48px auto;">
+      <div class="badge badge-primary" style="margin-bottom: 16px; padding: 6px 16px; font-size: 0.85rem;">
+        ⚡ Nagpur Municipal Corporation • AI-Powered Redressal Engine
+      </div>
+      <h1 style="font-size: 2.75rem; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 16px;">
+        Smarter Citizens. Cleaner Cities.<br>
+        <span style="color: var(--primary-color);">A Better Nagpur.</span>
+      </h1>
+      <p style="font-size: 1.15rem; color: #475569; line-height: 1.6; margin-bottom: 28px;">
+        Report civic issues naturally in <b>Marathi (मराठी)</b>, <b>Hindi (हिंदी)</b>, or <b>English</b> via voice, text, and photos. AI automatically classifies, routes, prevents duplicate tickets, and tracks resolution SLAs in real time.
+      </p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <a href="report.html" class="btn btn-primary" style="font-size: 1.05rem; padding: 14px 28px;">
+          <i data-lucide="mic"></i> Report a Civic Problem
+        </a>
+        <a href="citizen.html" class="btn btn-secondary" style="font-size: 1.05rem; padding: 14px 28px;">
+          <i data-lucide="layout-dashboard"></i> Citizen Home
+        </a>
+      </div>
+    </section>
+
+    <!-- Portal Selection Grid -->
+    <section style="margin-bottom: 56px;">
+      <h3 style="font-size: 1.3rem; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 24px;">
+        Select Portal / Workspace
+      </h3>
+      <div class="grid grid-3">
+        <!-- Citizen Portal -->
+        <a href="citizen.html" class="card card-hover" style="text-decoration: none; display: flex; flex-direction: column;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: grid; place-items: center; margin-bottom: 16px;">
+            <i data-lucide="users" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Citizen Portal</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; flex: 1;">
+            Report problems via voice in Marathi/Hindi, track live grievance timelines, verify repair quality, and coordinate with NMC.
+          </p>
+          <span style="color: var(--primary-color); font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+            Open Citizen Portal →
+          </span>
+        </a>
+
+        <!-- Officer Workspace -->
+        <a href="officer.html" class="card card-hover" style="text-decoration: none; display: flex; flex-direction: column;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #fef3c7; color: #d97706; display: grid; place-items: center; margin-bottom: 16px;">
+            <i data-lucide="briefcase" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">NMC Officer Desk</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; flex: 1;">
+            Field officer task management, SLA timers, repair photo upload proof, AI resolution validation, and status updates.
+          </p>
+          <span style="color: var(--primary-color); font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+            Open Officer Desk →
+          </span>
+        </a>
+
+        <!-- Command Center -->
+        <a href="command-center.html" class="card card-hover" style="text-decoration: none; display: flex; flex-direction: column;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: #ecfdf5; color: #059669; display: grid; place-items: center; margin-bottom: 16px;">
+            <i data-lucide="activity" style="width: 24px; height: 24px;"></i>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 8px;">Command Center</h3>
+          <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px; flex: 1;">
+            Citywide GIS telemetry, Leaflet hotspot clusters, recurring infrastructure failure warnings, and cross-department conflict detection.
+          </p>
+          <span style="color: var(--primary-color); font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+            Open Command Center →
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Real-time City Telemetry -->
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: #1e293b;">Live Citywide Telemetry</h3>
+        <span class="badge badge-success">Live from Backend</span>
+      </div>
+      <div class="grid grid-4" id="citizen-stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Total Grievances</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">SLA Rate</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <div id="app-footer"></div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/citizen.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

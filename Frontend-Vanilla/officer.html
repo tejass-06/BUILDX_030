@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Officer Dashboard • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container" style="padding-top: 32px; padding-bottom: 60px;">
+    <!-- Officer Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h1 style="font-size: 1.8rem; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+          NMC Officer Resolution Desk
+        </h1>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Municipal field operations, SLA compliance, and proof of resolution workspace.
+        </p>
+      </div>
+      <button class="btn btn-secondary" id="btn-officer-refresh">
+        <i data-lucide="refresh-cw"></i> Refresh Telemetry
+      </button>
+    </div>
+
+    <!-- Officer KPI Cards -->
+    <section style="margin-bottom: 32px;">
+      <div class="grid grid-4" id="officer-kpi-grid">
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Active Assigned Issues</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Urgent / High Priority</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">SLA Overdue Warning</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">...</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="card" style="margin-bottom: 24px; padding: 18px 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: center;">
+        <!-- Search -->
+        <div>
+          <input 
+            type="text" 
+            id="officer-search-input" 
+            class="form-control" 
+            placeholder="Search ID, title, zone..."
+          >
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <select id="officer-filter-status" class="form-control">
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending / Registered</option>
+            <option value="ASSIGNED">Assigned</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="RESOLVED">Resolved</option>
+            <option value="CLOSED">Closed</option>
+          </select>
+        </div>
+
+        <!-- Priority Filter -->
+        <div>
+          <select id="officer-filter-priority" class="form-control">
+            <option value="">All Priorities</option>
+            <option value="HIGH">High Priority</option>
+            <option value="MEDIUM">Medium Priority</option>
+            <option value="LOW">Low Priority</option>
+          </select>
+        </div>
+
+        <!-- Zone Filter -->
+        <div>
+          <select id="officer-filter-zone" class="form-control">
+            <option value="">All Nagpur Zones</option>
+            <option value="Ashi Nagar">Ashi Nagar Zone</option>
+            <option value="Dharampeth">Dharampeth Zone</option>
+            <option value="Nehru Nagar">Nehru Nagar Zone</option>
+            <option value="Laxmi Nagar">Laxmi Nagar Zone</option>
+            <option value="Gandhibagh">Gandhibagh Zone</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complaints Data Table -->
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b;">Department Grievance Queue</h3>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Click any row to open full workspace</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Problem & Location</th>
+              <th>Category</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>SLA Deadline</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="officer-table-body">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 32px;">
+                <div class="spinner" style="margin: 0 auto 12px auto;"></div>
+                <div style="color: var(--text-muted);">Fetching grievances from NMC registry...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/officer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

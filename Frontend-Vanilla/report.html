@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report a Civic Problem • NagarSaathi AI</title>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Main Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container" style="max-width: 800px; padding-top: 32px; padding-bottom: 60px;">
+    <!-- Stepper Navigation -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 0 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary-color);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-color); color: white; display: grid; place-items: center; font-size: 0.85rem;">1</span>
+        <span>Report Issue</span>
+      </div>
+      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">2</span>
+        <span>AI Analysis</span>
+      </div>
+      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">3</span>
+        <span>Duplicate Check</span>
+      </div>
+      <div style="flex: 1; height: 2px; background: #e2e8f0; margin: 0 12px;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-muted);">
+        <span style="width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #64748b; display: grid; place-items: center; font-size: 0.85rem;">4</span>
+        <span>Track</span>
+      </div>
+    </div>
+
+    <div class="card" style="padding: 28px;">
+      <h2 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 6px;">
+        Report Civic Problem
+      </h2>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
+        Speak in Marathi / Hindi / English or type details. Attach a photo and pinpoint the location.
+      </p>
+
+      <!-- Voice Input Section -->
+      <div class="voice-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="font-weight: 700; color: #1e40af; font-size: 0.95rem;">
+              <i data-lucide="mic" style="vertical-align: middle;"></i> Natural Voice Input
+            </div>
+            <span class="badge badge-primary">Multilingual Speech AI</span>
+          </div>
+
+          <!-- Voice Language Selector -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="voice-lang-select" style="font-size: 0.8rem; font-weight: 600; color: #1e40af;">Language:</label>
+            <select id="voice-lang-select" class="form-control" style="width: auto; padding: 4px 10px; font-size: 0.8rem;">
+              <option value="mr-IN">मराठी (Marathi)</option>
+              <option value="hi-IN">हिंदी (Hindi)</option>
+              <option value="en-IN">English (India)</option>
+            </select>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: #3b82f6; margin-bottom: 16px;">
+          Speak naturally (e.g. <i>"माझ्या घरासमोर तीन दिवसांपासून पाणी गळत आहे"</i> or <i>"सडक पर बड़ा गड्ढा है"</i>).
+        </p>
+
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" id="btn-voice-record" style="border-radius: 999px; padding: 10px 24px;">
+            <i data-lucide="mic"></i> <span>Start Speaking</span>
+          </button>
+
+          <div class="voice-wave" id="voice-waves">
+            <span class="voice-bar"></span>
+            <span class="voice-bar"></span>
+            <span class="voice-bar"></span>
+            <span class="voice-bar"></span>
+            <span class="voice-bar"></span>
+          </div>
+
+          <span id="voice-status" style="font-size: 0.85rem; font-weight: 600; color: #1e40af;">
+            Click button to speak
+          </span>
+        </div>
+      </div>
+
+      <!-- Problem Reporting Form -->
+      <form id="report-problem-form">
+        <!-- Problem Description -->
+        <div class="form-group">
+          <label class="form-label" for="complaint-description">
+            Problem Description <span style="color: var(--danger);">*</span>
+          </label>
+          <textarea 
+            id="complaint-description" 
+            class="form-control" 
+            rows="4" 
+            placeholder="Type your complaint or use voice input above. e.g. Clean water pipeline leaking heavily near Ashi Nagar square for 2 days..."
+            required
+          ></textarea>
+        </div>
+
+        <!-- Category (Optional Override, AI will auto-classify) -->
+        <div class="form-group">
+          <label class="form-label" for="complaint-category">
+            Civic Category (AI will verify automatically)
+          </label>
+          <select id="complaint-category" class="form-control">
+            <option value="">Auto-Detect via AI (Recommended)</option>
+            <option value="WATER_LEAKAGE">Water Leakage / Pipe Burst</option>
+            <option value="POTHOLE">Pothole / Broken Road</option>
+            <option value="GARBAGE">Garbage / Waste Dumping</option>
+            <option value="DRAINAGE">Drainage / Sewage Overflow</option>
+            <option value="STREETLIGHT">Streetlight Failure</option>
+            <option value="ELECTRICITY">Electricity / Power Hazard</option>
+            <option value="OTHER">Other Civic Issue</option>
+          </select>
+        </div>
+
+        <!-- Photo Upload & Preview -->
+        <div class="form-group">
+          <label class="form-label" for="complaint-photo">
+            Attach Photo (Optional - Helps AI verify issue & location EXIF)
+          </label>
+          <input type="file" id="complaint-photo" class="form-control" accept="image/*">
+          
+          <div id="photo-preview-container" class="photo-preview-box" style="display: none; margin-top: 12px;">
+            <img id="photo-preview-img" src="" alt="Complaint Photo Preview" class="photo-preview-img">
+            <div style="margin-top: 8px;">
+              <button type="button" class="btn btn-sm btn-danger" id="btn-remove-photo">
+                <i data-lucide="trash-2"></i> Remove Photo
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Resolution (GPS / Map) -->
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="complaint-location-text" style="margin-bottom: 0;">
+              Location / Landmark <span style="color: var(--danger);">*</span>
+            </label>
+            <button type="button" class="btn btn-sm btn-secondary" id="btn-get-gps">
+              <i data-lucide="crosshair"></i> Current GPS
+            </button>
+          </div>
+          <input 
+            type="text" 
+            id="complaint-location-text" 
+            class="form-control" 
+            placeholder="e.g. Ashi Nagar Square, Kamptee Road, Nagpur" 
+            required
+          >
+          <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+            Priority: Photo EXIF &gt; Device GPS &gt; Map Pinpoint.
+          </p>
+
+          <!-- Interactive Leaflet Map -->
+          <div id="location-picker-map" class="map-container" style="height: 220px; margin-top: 10px;"></div>
+        </div>
+
+        <!-- Citizen Contact -->
+        <div class="grid grid-2" style="margin-bottom: 24px;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="citizen-name">Your Name</label>
+            <input type="text" id="citizen-name" class="form-control" placeholder="Citizen Name">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="citizen-phone">Mobile Number (For WhatsApp / SMS)</label>
+            <input type="tel" id="citizen-phone" class="form-control" placeholder="10-digit mobile number">
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+          <a href="citizen.html" class="btn btn-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary" id="btn-proceed-ai">
+            <span>Analyze with AI</span> <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
