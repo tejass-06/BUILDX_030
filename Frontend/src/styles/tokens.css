@@ -1,0 +1,105 @@
+/* ==========================================================================
+   NagarSaathi Design System Tokens (LOCKED THEME)
+   AI-Powered Civic Problem Intelligence & Smart Governance Platform
+   Strict Single Theme: Modern, Civic, Trustworthy, Accessible
+   ========================================================================== */
+
+:root {
+  /* Core Brand & Canvas Tokens (LOCKED) */
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-active: #3730A3;
+  --primary-bg: #EEF2FF;
+  --primary-border: #C7D2FE;
+  --primary-contrast: #FFFFFF;
+
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-hover: #F8FAFC;
+  --surface-muted: #F1F5F9;
+
+  --text: #1E293B;
+  --text-muted: #64748B;
+  --text-subtle: #94A3B8;
+  --text-inverse: #FFFFFF;
+
+  /* Semantic Status Tokens (Strictly functional, no random decoration) */
+  /* Green: Resolved, Fixed, Successful, Verified */
+  --success: #16A34A;
+  --success-bg: #DCFCE7;
+  --success-border: #86EFAC;
+  --success-text: #14532D;
+
+  /* Orange: Warning, SLA Approaching, Needs Attention */
+  --warning: #F59E0B;
+  --warning-bg: #FEF3C7;
+  --warning-border: #FDE68A;
+  --warning-text: #78350F;
+
+  /* Red: Escalated, SLA Breached, Urgent, Error */
+  --error: #DC2626;
+  --error-bg: #FEE2E2;
+  --error-border: #FCA5A5;
+  --error-text: #7F1D1D;
+
+  /* Borders & Dividers */
+  --border: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-focus: #4F46E5;
+  --focus-ring: rgba(79, 70, 229, 0.2);
+
+  /* Spacing Scale (8pt grid system) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Font Sizes & Line Heights */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-xs-lh: 1rem;
+  --text-sm: 0.875rem;    /* 14px */
+  --text-sm-lh: 1.25rem;
+  --text-base: 1rem;       /* 16px */
+  --text-base-lh: 1.5rem;
+  --text-lg: 1.125rem;    /* 18px */
+  --text-lg-lh: 1.75rem;
+  --text-xl: 1.25rem;     /* 20px */
+  --text-xl-lh: 1.75rem;
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-2xl-lh: 2rem;
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-3xl-lh: 2.25rem;
+
+  /* Border Radii (Moderate, clean civic corners) */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Shadows (Subtle, clean, not excessive) */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.06), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
+
+  /* Layout dimensions */
+  --sidebar-width: 260px;
+  --header-height: 64px;
+  --mobile-bottom-nav-height: 60px;
+  --max-content-width: 1280px;
+
+  /* Transitions (subtle, non-flashy) */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}

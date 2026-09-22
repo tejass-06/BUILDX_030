@@ -1,0 +1,6 @@
+/* ==========================================================================
+   NagarSaathi Core Entry Stylesheet
+   Imports locked design tokens, accessibility reset, component & layout styles.
+   ========================================================================== */
+
+@import './styles/global.css';
