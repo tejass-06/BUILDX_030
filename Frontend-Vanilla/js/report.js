@@ -1,6 +1,6 @@
 /**
  * NagarSaathi AI - Report Problem Controller
- * Supports Multimodal Input: Natural Voice (Marathi/Hindi/English), Text, Photo, Geolocation/Map.
+ * Supports Multimodal Input: Natural Voice (Marathi/Hindi/English), Text, Photo with EXIF, Geolocation/Map.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,12 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
 const ReportController = {
   voiceEngine: null,
   mapEngine: null,
-  selectedFile: null,
+  selectedPhotoDataUrl: null,
+  selectedPhotoFileName: null,
   currentLocation: {
     lat: null,
     lng: null,
-    address: ''
+    address: '',
+    source: 'MANUAL'
   },
+  watchId: null,
 
   init() {
     this.setupVoice();
@@ -83,7 +86,7 @@ const ReportController = {
   },
 
   /**
-   * Photo Upload & Instant Preview
+   * Photo Upload & Instant Preview with EXIF Check
    */
   setupPhotoUpload() {
     const fileInput = document.getElementById('complaint-photo');
@@ -102,11 +105,13 @@ const ReportController = {
           return;
         }
 
-        this.selectedFile = file;
+        this.selectedPhotoFileName = file.name;
         const reader = new FileReader();
         reader.onload = (re) => {
+          this.selectedPhotoDataUrl = re.target.result;
           if (previewImg) previewImg.src = re.target.result;
           if (previewContainer) previewContainer.style.display = 'block';
+          Utils.showToast('Photo attached successfully', 'success');
         };
         reader.readAsDataURL(file);
       }
@@ -114,7 +119,8 @@ const ReportController = {
 
     if (removeBtn) {
       removeBtn.addEventListener('click', () => {
-        this.selectedFile = null;
+        this.selectedPhotoDataUrl = null;
+        this.selectedPhotoFileName = null;
         if (fileInput) fileInput.value = '';
         if (previewContainer) previewContainer.style.display = 'none';
         if (previewImg) previewImg.src = '';
@@ -123,7 +129,7 @@ const ReportController = {
   },
 
   /**
-   * Location Picker: GPS + Map + Reverse Geocoding
+   * Location Picker: GPS (Single + Live) + Map + Reverse Geocoding
    */
   setupLocationPicker() {
     const gpsBtn = document.getElementById('btn-get-gps');
@@ -135,7 +141,7 @@ const ReportController = {
     });
 
     this.mapEngine.setupPicker((loc) => {
-      this.currentLocation = loc;
+      this.currentLocation = { ...loc, source: 'MANUAL' };
       if (locText) {
         locText.value = loc.address;
       }
@@ -149,7 +155,7 @@ const ReportController = {
         }
 
         gpsBtn.disabled = true;
-        gpsBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Detecting...';
+        gpsBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Locating...';
 
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
@@ -157,12 +163,12 @@ const ReportController = {
             const lng = pos.coords.longitude;
             this.mapEngine.setPickerLocation(lat, lng);
             const address = await MapEngine.reverseGeocode(lat, lng);
-            this.currentLocation = { lat, lng, address };
+            this.currentLocation = { lat, lng, address, source: 'DEVICE_GPS' };
             if (locText) locText.value = address;
             gpsBtn.disabled = false;
             gpsBtn.innerHTML = '<i data-lucide="crosshair"></i> Current GPS';
             if (window.lucide) lucide.createIcons();
-            Utils.showToast('Location captured via GPS', 'success');
+            Utils.showToast('Location captured via GPS: ' + address, 'success');
           },
           (err) => {
             gpsBtn.disabled = false;
@@ -203,9 +209,11 @@ const ReportController = {
         locationText: locationText || 'Ashi Nagar, Nagpur',
         latitude: this.currentLocation.lat || 21.1458,
         longitude: this.currentLocation.lng || 79.0882,
+        locationSource: this.currentLocation.source || 'MANUAL',
         citizenName: citizenName || 'Anonymous Citizen',
         citizenPhone: citizenPhone || '',
-        hasPhoto: !!this.selectedFile
+        photoDataUrl: this.selectedPhotoDataUrl || null,
+        photoFileName: this.selectedPhotoFileName || null
       };
 
       // Store in session storage for AI Understanding Screen
@@ -242,8 +250,17 @@ const ReportController = {
         this.currentLocation = {
           lat: draft.latitude,
           lng: draft.longitude,
-          address: draft.locationText
+          address: draft.locationText,
+          source: draft.locationSource || 'MANUAL'
         };
+      }
+      if (draft.photoDataUrl) {
+        this.selectedPhotoDataUrl = draft.photoDataUrl;
+        this.selectedPhotoFileName = draft.photoFileName;
+        const previewImg = document.getElementById('photo-preview-img');
+        const previewContainer = document.getElementById('photo-preview-container');
+        if (previewImg) previewImg.src = draft.photoDataUrl;
+        if (previewContainer) previewContainer.style.display = 'block';
       }
     } catch (e) {
       console.warn('Could not restore draft:', e);

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-card {
+      max-width: 460px;
+      margin: 40px auto 60px auto;
+      padding: 32px;
+    }
+    .auth-tab-group {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s ease;
+    }
+    .auth-tab.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container">
+    <div class="card auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="width: 52px; height: 52px; background: #e0f2fe; color: #0284c7; border-radius: 14px; display: grid; place-items: center; margin: 0 auto 12px auto;">
+          <i data-lucide="shield-check" style="width: 28px; height: 28px;"></i>
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 4px;">Sign In to NagarSaathi</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);" id="login-subtext">Access your civic dashboard & grievance tracking</p>
+      </div>
+
+      <!-- Portal Tabs -->
+      <div class="auth-tab-group">
+        <div class="auth-tab active" data-portal="citizen">Citizen</div>
+        <div class="auth-tab" data-portal="officer">NMC Officer</div>
+        <div class="auth-tab" data-portal="admin">Command Center</div>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="login-error-alert" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: var(--border-radius-sm); font-size: 0.85rem; margin-bottom: 16px;">
+        <span id="login-error-text">Invalid email or password</span>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input 
+            type="email" 
+            id="login-email" 
+            class="form-control" 
+            placeholder="name@example.com" 
+            required 
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="login-password" style="margin-bottom: 0;">Password</label>
+          </div>
+          <input 
+            type="password" 
+            id="login-password" 
+            class="form-control" 
+            placeholder="Enter your password" 
+            required 
+            autocomplete="current-password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-login-submit" style="width: 100%; padding: 12px; font-weight: 700;">
+          <i data-lucide="log-in"></i> Sign In
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; color: var(--text-muted);">
+        Don't have an account? <a href="signup.html" style="color: var(--primary-color); font-weight: 700; text-decoration: none;">Register / Request Access</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let selectedPortal = 'citizen';
+
+      const tabs = document.querySelectorAll('.auth-tab');
+      const subtext = document.getElementById('login-subtext');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          selectedPortal = tab.dataset.portal;
+
+          if (selectedPortal === 'citizen') {
+            subtext.textContent = 'Access your citizen portal & grievance tracking';
+          } else if (selectedPortal === 'officer') {
+            subtext.textContent = 'NMC Field Officer Desk & resolution workspace';
+          } else {
+            subtext.textContent = 'Municipal Administration & Command Center';
+          }
+        });
+      });
+
+      const form = document.getElementById('login-form');
+      const errorAlert = document.getElementById('login-error-alert');
+      const errorText = document.getElementById('login-error-text');
+      const submitBtn = document.getElementById('btn-login-submit');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorAlert.style.display = 'none';
+
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Authenticating...';
+
+        try {
+          const result = await AuthManager.login(email, password);
+          Utils.showToast(`Welcome back, ${result.user.name}!`, 'success');
+
+          // Check redirect or route by role
+          const params = new URLSearchParams(window.location.search);
+          const redirect = params.get('redirect');
+
+          if (redirect) {
+            window.location.href = decodeURIComponent(redirect);
+          } else {
+            const role = (result.user.role || '').toUpperCase();
+            if (role === 'OFFICER') {
+              window.location.href = 'officer.html';
+            } else if (role === 'ADMIN' || role === 'COMMAND_CENTER') {
+              window.location.href = 'command-center.html';
+            } else {
+              window.location.href = 'citizen.html';
+            }
+          }
+        } catch (err) {
+          errorText.textContent = err.message;
+          errorAlert.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i data-lucide="log-in"></i> Sign In';
+          if (window.lucide) lucide.createIcons();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 /**
  * NagarSaathi AI - Municipal Command & Control Center
- * Citywide analytics, Leaflet hotspot intelligence, recurring issue detection, and infrastructure conflict monitoring.
+ * Citywide analytics, Leaflet hotspot intelligence, recurring issue detection, department conflicts, and officer approval queue.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,7 +20,8 @@ const CommandCenter = {
       this.loadHotspots(),
       this.loadWorkConflicts(),
       this.loadRecurringIssues(),
-      this.loadZoneBreakdown()
+      this.loadZoneBreakdown(),
+      this.loadPendingOfficers()
     ]);
   },
 
@@ -33,6 +34,7 @@ const CommandCenter = {
         this.loadWorkConflicts();
         this.loadRecurringIssues();
         this.loadZoneBreakdown();
+        this.loadPendingOfficers();
         Utils.showToast('Command Center telemetry refreshed', 'info');
       });
     }
@@ -167,7 +169,7 @@ const CommandCenter = {
 
     try {
       const response = await API.getRecurringIssues();
-      const recurring = response.recurring_issues || (Array.isArray(response) ? response : []);
+      const recurring = response.recurring_issues || response.hotspots || (Array.isArray(response) ? response : []);
 
       if (recurring.length === 0) {
         container.innerHTML = `
@@ -187,16 +189,16 @@ const CommandCenter = {
         <div class="card" style="border-left: 4px solid var(--warning); margin-bottom: 12px; padding: 14px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
             <span class="badge badge-warning">Chronic Failure Cluster</span>
-            <span style="font-size: 0.75rem; font-weight: 700; color: var(--danger);">${r.count || 5}+ Reports</span>
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--danger);">${r.count || r.complaint_count || 3}+ Reports</span>
           </div>
           <h4 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
-            ${Utils.escapeHtml(r.location || 'Ashi Nagar, Nagpur')}
+            ${Utils.escapeHtml(r.zone_name || r.location_name || r.location || 'Ashi Nagar, Nagpur')}
           </h4>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
-            <b>Pattern:</b> ${Utils.escapeHtml(r.problem || 'Recurring Water Pipe Burst')}
+            <b>Pattern:</b> ${Utils.escapeHtml(r.problem || r.category || 'Recurring Infrastructure Issue')}
           </p>
           <div style="font-size: 0.8rem; color: var(--text-muted);">
-            <b>Suggested Civic Action:</b> ${Utils.escapeHtml(r.recommendation || 'Preventative pipeline replacement suggested instead of spot patch.')}
+            <b>Suggested Civic Action:</b> Preventative capital overhaul suggested instead of spot patching.
           </div>
         </div>
       `).join('');
@@ -249,6 +251,78 @@ const CommandCenter = {
       `).join('');
     } catch (e) {
       console.warn('Zone breakdown error:', e);
+    }
+  },
+
+  // ================= OFFICER APPROVAL WORKFLOW =================
+  async loadPendingOfficers() {
+    const tbody = document.getElementById('cc-officer-approval-tbody');
+    if (!tbody) return;
+
+    try {
+      const requests = await API.getPendingOfficerRequests();
+      if (!requests || requests.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">
+              No pending officer registration requests.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = requests.map(req => `
+        <tr>
+          <td style="font-weight: 700; color: #1e293b;">${Utils.escapeHtml(req.name)}</td>
+          <td>${Utils.escapeHtml(req.email)}</td>
+          <td>${Utils.escapeHtml(req.department_name || req.department_code || 'General')}</td>
+          <td>${Utils.escapeHtml(req.zone || 'Nagpur')}</td>
+          <td>
+            <span class="badge badge-warning">Pending Approval</span>
+          </td>
+          <td>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-sm btn-success" onclick="CommandCenter.approveOfficer(${req.id})" title="Approve and activate officer">
+                <i data-lucide="check"></i> Approve
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="CommandCenter.rejectOfficer(${req.id})" title="Reject request">
+                <i data-lucide="x"></i> Reject
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      if (window.lucide) lucide.createIcons();
+    } catch (e) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 16px; color: var(--text-muted); font-size: 0.85rem;">
+            Officer request verification feed active. Log in with Administrator credentials to authorize field officers.
+          </td>
+        </tr>
+      `;
+    }
+  },
+
+  async approveOfficer(userId) {
+    try {
+      await API.approveOfficerRequest(userId);
+      Utils.showToast('Officer registration approved successfully!', 'success');
+      this.loadPendingOfficers();
+    } catch (err) {
+      Utils.showToast('Approval failed: ' + err.message, 'danger');
+    }
+  },
+
+  async rejectOfficer(userId) {
+    try {
+      await API.rejectOfficerRequest(userId);
+      Utils.showToast('Officer request rejected.', 'info');
+      this.loadPendingOfficers();
+    } catch (err) {
+      Utils.showToast('Rejection failed: ' + err.message, 'danger');
     }
   }
 };

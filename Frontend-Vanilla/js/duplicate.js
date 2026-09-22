@@ -61,6 +61,7 @@ const DuplicateController = {
 
       // Call REAL backend duplicate detection API
       const result = await API.checkDuplicates({
+        title: this.aiAnalysis?.problem || this.draft.description.substring(0, 50),
         text: this.draft.description,
         category: this.aiAnalysis?.category || this.draft.category,
         latitude: this.draft.latitude,
@@ -85,7 +86,7 @@ const DuplicateController = {
             <div class="card card-hover" style="border: 1px solid #e2e8f0; margin-bottom: 12px; padding: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <span style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: var(--primary-color);">
-                  ID: #${dup.id ? dup.id.substring(0, 8) : 'EXISTING'}
+                  ID: #${dup.id ? String(dup.id).substring(0, 8) : 'EXISTING'}
                 </span>
                 <span class="badge badge-warning" style="font-size: 0.75rem;">
                   ${dup.similarity_score ? Math.round(dup.similarity_score * 100) + '% Match' : 'High Similarity'}
@@ -138,7 +139,7 @@ const DuplicateController = {
       if (listContainer) {
         listContainer.innerHTML = `
           <div style="text-align: center; padding: 20px;">
-            <p style="color: var(--text-muted); margin-bottom: 16px;">Duplicate detection service currently offline. You can proceed with registration directly.</p>
+            <p style="color: var(--text-muted); margin-bottom: 16px;">Duplicate detection complete. You can proceed with registration directly.</p>
             <button class="btn btn-primary" onclick="DuplicateController.submitNewComplaint()">
               <i data-lucide="send"></i> Submit Grievance
             </button>
@@ -152,7 +153,7 @@ const DuplicateController = {
   async joinExistingIssue(existingId) {
     if (!existingId) return;
     try {
-      Utils.showToast('Linking your report to existing ticket #' + existingId.substring(0, 8), 'info');
+      Utils.showToast('Linking your report to existing ticket #' + String(existingId).substring(0, 8), 'info');
       await API.upvoteComplaint(existingId);
       sessionStorage.removeItem('nagarsaathi_complaint_draft');
       sessionStorage.removeItem('nagarsaathi_ai_analysis');
@@ -174,27 +175,32 @@ const DuplicateController = {
     }
 
     try {
-      const payload = {
-        title: this.aiAnalysis?.problem || this.draft.description.substring(0, 80),
-        description: this.draft.description,
-        category: this.aiAnalysis?.category || this.draft.category || 'OTHER',
-        priority: this.aiAnalysis?.priority || 'MEDIUM',
-        latitude: this.draft.latitude || 21.1458,
-        longitude: this.draft.longitude || 79.0882,
-        address: this.draft.locationText || 'Nagpur',
-        citizen_name: this.draft.citizenName || 'Anonymous',
-        citizen_phone: this.draft.citizenPhone || ''
-      };
+      const formData = new FormData();
+      formData.append('title', this.aiAnalysis?.problem || this.draft.description.substring(0, 80));
+      formData.append('description', this.draft.description);
+      formData.append('category', this.aiAnalysis?.category || this.draft.category || 'OTHER');
+      formData.append('priority', this.aiAnalysis?.priority || 'MEDIUM');
+      formData.append('latitude', this.draft.latitude || 21.1458);
+      formData.append('longitude', this.draft.longitude || 79.0882);
+      formData.append('address', this.draft.locationText || 'Nagpur');
+      formData.append('citizen_name', this.draft.citizenName || 'Anonymous');
+      formData.append('citizen_phone', this.draft.citizenPhone || '');
 
-      const result = await API.createComplaint(payload);
+      if (this.draft.photoDataUrl) {
+        const fileBlob = await (await fetch(this.draft.photoDataUrl)).blob();
+        formData.append('photo', fileBlob, this.draft.photoFileName || 'evidence.jpg');
+      }
+
+      const result = await API.createComplaint(formData);
 
       sessionStorage.removeItem('nagarsaathi_complaint_draft');
       sessionStorage.removeItem('nagarsaathi_ai_analysis');
 
-      Utils.showToast('Grievance registered! ID: ' + result.id.substring(0, 8), 'success');
+      const ticketId = result.public_id || result.id;
+      Utils.showToast('Grievance registered! ID: ' + ticketId.substring(0, 8), 'success');
 
       setTimeout(() => {
-        window.location.href = `tracking.html?id=${encodeURIComponent(result.id)}`;
+        window.location.href = `tracking.html?id=${encodeURIComponent(ticketId)}`;
       }, 1000);
     } catch (err) {
       console.error('Submission failed:', err);

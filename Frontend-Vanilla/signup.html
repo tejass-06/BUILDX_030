@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up • NagarSaathi AI</title>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .auth-card {
+      max-width: 520px;
+      margin: 40px auto 60px auto;
+      padding: 32px;
+    }
+    .auth-tab-group {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s ease;
+    }
+    .auth-tab.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <div id="app-header"></div>
+  <div id="toast-container" class="toast-container"></div>
+
+  <main class="container">
+    <div class="card auth-card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="width: 52px; height: 52px; background: #e0f2fe; color: #0284c7; border-radius: 14px; display: grid; place-items: center; margin: 0 auto 12px auto;">
+          <i data-lucide="user-plus" style="width: 28px; height: 28px;"></i>
+        </div>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 4px;" id="signup-title">Create Citizen Account</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted);" id="signup-subtitle">Register to report civic grievances and track redressal</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tab-group">
+        <div class="auth-tab active" data-type="citizen">Citizen Account</div>
+        <div class="auth-tab" data-type="officer">Officer Access Request</div>
+      </div>
+
+      <!-- Error / Success Alert -->
+      <div id="signup-error-alert" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 12px; border-radius: var(--border-radius-sm); font-size: 0.85rem; margin-bottom: 16px;">
+        <span id="signup-error-text">Registration error</span>
+      </div>
+      <div id="signup-success-alert" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 12px; border-radius: var(--border-radius-sm); font-size: 0.85rem; margin-bottom: 16px;">
+        <span id="signup-success-text">Registration successful!</span>
+      </div>
+
+      <form id="signup-form">
+        <!-- Full Name -->
+        <div class="form-group">
+          <label class="form-label" for="signup-name">Full Name <span style="color: var(--danger);">*</span></label>
+          <input type="text" id="signup-name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email Address <span style="color: var(--danger);">*</span></label>
+          <input type="email" id="signup-email" class="form-control" placeholder="name@example.com" required>
+        </div>
+
+        <!-- Phone -->
+        <div class="form-group">
+          <label class="form-label" for="signup-phone">Mobile Phone (10 digits)</label>
+          <input type="tel" id="signup-phone" class="form-control" placeholder="9876543210">
+        </div>
+
+        <!-- Citizen Preferred Language -->
+        <div class="form-group" id="group-citizen-lang">
+          <label class="form-label" for="signup-lang">Preferred Language</label>
+          <select id="signup-lang" class="form-control">
+            <option value="en">English</option>
+            <option value="mr">मराठी (Marathi)</option>
+            <option value="hi">हिंदी (Hindi)</option>
+          </select>
+        </div>
+
+        <!-- Officer Specific Fields -->
+        <div id="group-officer-fields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="signup-employee-id">Employee / Officer Badge ID <span style="color: var(--danger);">*</span></label>
+            <input type="text" id="signup-employee-id" class="form-control" placeholder="e.g. NMC-ENG-2024-089">
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label" for="signup-department">Department <span style="color: var(--danger);">*</span></label>
+              <select id="signup-department" class="form-control">
+                <option value="ROAD">Road & Infrastructure</option>
+                <option value="WATER">Water Supply Department</option>
+                <option value="SOLID_WASTE">Solid Waste & Sanitation</option>
+                <option value="ELECTRICITY">Electricity & Lighting</option>
+                <option value="TRAFFIC">Traffic & Transport</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="signup-zone">Assigned Ward / Zone <span style="color: var(--danger);">*</span></label>
+              <select id="signup-zone" class="form-control">
+                <option value="Ashi Nagar">Ashi Nagar Zone</option>
+                <option value="Dharampeth">Dharampeth Zone</option>
+                <option value="Nehru Nagar">Nehru Nagar Zone</option>
+                <option value="Laxmi Nagar">Laxmi Nagar Zone</option>
+                <option value="Gandhibagh">Gandhibagh Zone</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #92400e; padding: 10px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-bottom: 16px;">
+            ⚠️ <b>Security Notice:</b> Field officer registration requests are audited and must be approved by the Municipal Administrator before dashboard access is activated.
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="grid grid-2">
+          <div class="form-group">
+            <label class="form-label" for="signup-password">Password <span style="color: var(--danger);">*</span></label>
+            <input type="password" id="signup-password" class="form-control" placeholder="Min 8 characters" required minlength="8">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="signup-confirm-password">Confirm Password <span style="color: var(--danger);">*</span></label>
+            <input type="password" id="signup-confirm-password" class="form-control" placeholder="Re-enter password" required minlength="8">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-signup-submit" style="width: 100%; padding: 12px; font-weight: 700; margin-top: 8px;">
+          <i data-lucide="check-circle"></i> Complete Registration
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 0.85rem; color: var(--text-muted);">
+        Already have an account? <a href="login.html" style="color: var(--primary-color); font-weight: 700; text-decoration: none;">Sign In</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let currentType = 'citizen';
+
+      const tabs = document.querySelectorAll('.auth-tab');
+      const title = document.getElementById('signup-title');
+      const subtitle = document.getElementById('signup-subtitle');
+      const citizenGroup = document.getElementById('group-citizen-lang');
+      const officerGroup = document.getElementById('group-officer-fields');
+      const submitBtn = document.getElementById('btn-signup-submit');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentType = tab.dataset.type;
+
+          if (currentType === 'citizen') {
+            title.textContent = 'Create Citizen Account';
+            subtitle.textContent = 'Register to report civic grievances and track redressal';
+            citizenGroup.style.display = 'block';
+            officerGroup.style.display = 'none';
+            submitBtn.innerHTML = '<i data-lucide="check-circle"></i> Create Citizen Account';
+          } else {
+            title.textContent = 'Officer Registration Request';
+            subtitle.textContent = 'Submit credential verification to Municipal Administrator';
+            citizenGroup.style.display = 'none';
+            officerGroup.style.display = 'block';
+            submitBtn.innerHTML = '<i data-lucide="send"></i> Submit Officer Request';
+          }
+          if (window.lucide) lucide.createIcons();
+        });
+      });
+
+      const form = document.getElementById('signup-form');
+      const errorAlert = document.getElementById('signup-error-alert');
+      const errorText = document.getElementById('signup-error-text');
+      const successAlert = document.getElementById('signup-success-alert');
+      const successText = document.getElementById('signup-success-text');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorAlert.style.display = 'none';
+        successAlert.style.display = 'none';
+
+        const name = document.getElementById('signup-name').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const phone = document.getElementById('signup-phone').value.trim();
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+        if (password !== confirmPassword) {
+          errorText.textContent = 'Passwords do not match. Please re-enter.';
+          errorAlert.style.display = 'block';
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; border-width: 2px;"></span> Registering...';
+
+        try {
+          const payload = {
+            name,
+            email,
+            phone,
+            password,
+            role: currentType === 'officer' ? 'OFFICER_PENDING' : 'CITIZEN'
+          };
+
+          if (currentType === 'officer') {
+            payload.department_code = document.getElementById('signup-department').value;
+            payload.zone = document.getElementById('signup-zone').value;
+            payload.employee_id = document.getElementById('signup-employee-id').value.trim();
+          }
+
+          const res = await AuthManager.signup(payload);
+
+          if (currentType === 'officer') {
+            successText.textContent = 'Officer registration request submitted successfully! Pending Administrator approval.';
+            successAlert.style.display = 'block';
+            form.reset();
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i data-lucide="send"></i> Submit Officer Request';
+          } else {
+            successText.textContent = 'Account created successfully! Redirecting to Citizen Portal...';
+            successAlert.style.display = 'block';
+            setTimeout(() => {
+              window.location.href = 'citizen.html';
+            }, 1200);
+          }
+        } catch (err) {
+          errorText.textContent = err.message;
+          errorAlert.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i data-lucide="check-circle"></i> Complete Registration';
+        }
+        if (window.lucide) lucide.createIcons();
+      });
+    });
+  </script>
+</body>
+</html>

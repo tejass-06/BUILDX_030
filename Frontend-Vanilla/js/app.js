@@ -1,6 +1,6 @@
 /**
  * NagarSaathi AI - Global Application Shell
- * Manages unified header/footer, language switching, role navigation, and system status.
+ * Manages unified header/footer, language switching, auth widget, and system status.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,8 +20,9 @@ const App = {
     const headerContainer = document.getElementById('app-header');
     if (!headerContainer) return;
 
-    const currentLang = Utils.getLanguage();
-    const userRole = Utils.getAuthRole() || 'citizen';
+    const currentLang = typeof Utils !== 'undefined' ? Utils.getLanguage() : 'en';
+    const user = typeof AuthManager !== 'undefined' ? AuthManager.getUser() : null;
+    const isAuth = !!user;
 
     headerContainer.innerHTML = `
       <header class="navbar">
@@ -65,6 +66,25 @@ const App = {
               <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en">EN</button>
               <button class="lang-btn ${currentLang === 'mr' ? 'active' : ''}" data-lang="mr">मराठी</button>
               <button class="lang-btn ${currentLang === 'hi' ? 'active' : ''}" data-lang="hi">हिंदी</button>
+            </div>
+
+            <!-- Auth Status Widget -->
+            <div class="auth-widget" id="nav-auth-widget" style="display: flex; align-items: center; gap: 8px;">
+              ${isAuth ? `
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+                  <span style="font-weight: 700; color: #1e293b;">${Utils.escapeHtml(user.name || user.email)}</span>
+                  <span class="badge ${user.role === 'OFFICER' ? 'badge-warning' : (user.role === 'ADMIN' ? 'badge-danger' : 'badge-primary')}" style="font-size: 0.7rem;">
+                    ${user.role || 'CITIZEN'}
+                  </span>
+                  <button type="button" class="btn btn-sm btn-secondary" onclick="AuthManager.logout()" title="Sign Out" style="padding: 4px 8px;">
+                    <i data-lucide="log-out" style="width: 14px; height: 14px;"></i>
+                  </button>
+                </div>
+              ` : `
+                <a href="login.html" class="btn btn-sm btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">
+                  <i data-lucide="log-in" style="width: 14px; height: 14px;"></i> Sign In
+                </a>
+              `}
             </div>
 
             <!-- Health Indicator -->
@@ -125,7 +145,7 @@ const App = {
 
           <div class="footer-bottom">
             <div>© ${new Date().getFullYear()} NagarSaathi AI • Nagpur Smart City Mission</div>
-            <div>Official Fallback Production Frontend • Zero Dependency Vanilla Stack</div>
+            <div>Primary Production Frontend • Zero Dependency Vanilla Stack</div>
           </div>
         </div>
       </footer>
@@ -141,7 +161,9 @@ const App = {
       const btn = e.target.closest('.lang-btn');
       if (btn && btn.dataset.lang) {
         const lang = btn.dataset.lang;
-        Utils.setLanguage(lang);
+        if (typeof Utils !== 'undefined') {
+          Utils.setLanguage(lang);
+        }
 
         document.querySelectorAll('.lang-btn').forEach(b => {
           b.classList.toggle('active', b.dataset.lang === lang);
@@ -150,11 +172,13 @@ const App = {
         // Trigger i18n update on all [data-i18n] elements
         document.querySelectorAll('[data-i18n]').forEach(el => {
           const key = el.dataset.i18n;
-          const translated = Utils.t(key);
+          const translated = typeof Utils !== 'undefined' ? Utils.t(key) : key;
           if (translated) el.textContent = translated;
         });
 
-        Utils.showToast(`Language switched to ${lang.toUpperCase()}`, 'info');
+        if (typeof Utils !== 'undefined') {
+          Utils.showToast(`Language switched to ${lang.toUpperCase()}`, 'info');
+        }
       }
     });
   },

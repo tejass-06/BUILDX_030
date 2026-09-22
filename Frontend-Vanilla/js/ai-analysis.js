@@ -41,7 +41,6 @@ const AIAnalysisController = {
     const nextBtn = document.getElementById('btn-check-duplicates');
     if (nextBtn) {
       nextBtn.addEventListener('click', () => {
-        // Proceed to duplicate check screen
         window.location.href = 'duplicate.html';
       });
     }
@@ -71,7 +70,6 @@ const AIAnalysisController = {
       });
 
       this.aiResult = response;
-      // Store AI analysis with draft for subsequent steps
       sessionStorage.setItem('nagarsaathi_ai_analysis', JSON.stringify(response));
 
       this.renderAIResult(response);
@@ -92,7 +90,6 @@ const AIAnalysisController = {
   },
 
   renderAIResult(data) {
-    // Exact fields from backend
     const lang = data.language || data.detected_language || 'Marathi / Multilingual';
     const problem = data.problem || data.summary || this.draft.description;
     const category = data.category || this.draft.category || 'OTHER';
@@ -131,28 +128,34 @@ const AIAnalysisController = {
     }
 
     try {
-      const payload = {
-        title: this.aiResult?.problem || this.draft.description.substring(0, 80),
-        description: this.draft.description,
-        category: this.aiResult?.category || this.draft.category || 'OTHER',
-        priority: this.aiResult?.priority || 'MEDIUM',
-        latitude: this.draft.latitude || 21.1458,
-        longitude: this.draft.longitude || 79.0882,
-        address: this.draft.locationText || 'Nagpur',
-        citizen_name: this.draft.citizenName || 'Anonymous',
-        citizen_phone: this.draft.citizenPhone || ''
-      };
+      const formData = new FormData();
+      formData.append('title', this.aiResult?.problem || this.draft.description.substring(0, 80));
+      formData.append('description', this.draft.description);
+      formData.append('category', this.aiResult?.category || this.draft.category || 'OTHER');
+      formData.append('priority', this.aiResult?.priority || 'MEDIUM');
+      formData.append('latitude', this.draft.latitude || 21.1458);
+      formData.append('longitude', this.draft.longitude || 79.0882);
+      formData.append('address', this.draft.locationText || 'Nagpur');
+      formData.append('citizen_name', this.draft.citizenName || 'Anonymous');
+      formData.append('citizen_phone', this.draft.citizenPhone || '');
 
-      const result = await API.createComplaint(payload);
+      // Attach file from base64 if present
+      if (this.draft.photoDataUrl) {
+        const fileBlob = await (await fetch(this.draft.photoDataUrl)).blob();
+        formData.append('photo', fileBlob, this.draft.photoFileName || 'evidence.jpg');
+      }
+
+      const result = await API.createComplaint(formData);
 
       // Clean session draft
       sessionStorage.removeItem('nagarsaathi_complaint_draft');
       sessionStorage.removeItem('nagarsaathi_ai_analysis');
 
-      Utils.showToast('Complaint registered successfully! ID: ' + result.id.substring(0, 8), 'success');
+      const ticketId = result.public_id || result.id;
+      Utils.showToast('Complaint registered successfully! ID: ' + ticketId.substring(0, 8), 'success');
 
       setTimeout(() => {
-        window.location.href = `tracking.html?id=${encodeURIComponent(result.id)}`;
+        window.location.href = `tracking.html?id=${encodeURIComponent(ticketId)}`;
       }, 1000);
     } catch (err) {
       console.error('Submission failed:', err);

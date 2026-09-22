@@ -120,6 +120,44 @@
       </div>
     </section>
 
+    <!-- Officer Access & Authorization Queue -->
+    <section style="margin-bottom: 32px;">
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
+              Officer Authorization & Approval Queue
+            </h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Review and grant department permissions to field officers</span>
+          </div>
+          <span class="badge badge-warning">Admin RBAC Protected</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Officer Name</th>
+                <th>Official Email</th>
+                <th>Department</th>
+                <th>Assigned Ward</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="cc-officer-approval-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 24px;">
+                  <div class="spinner" style="margin: 0 auto 8px auto;"></div>
+                  <div style="color: var(--text-muted);">Loading pending officer requests...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- Zone SLA Performance Table -->
     <section>
       <div class="card" style="padding: 0; overflow: hidden;">
@@ -157,6 +195,7 @@
 
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/map.js"></script>
   <script src="js/command-center.js"></script>
