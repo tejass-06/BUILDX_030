@@ -104,9 +104,9 @@ const ResolutionController = {
     const beforeImg = document.getElementById('res-before-img');
     const afterImgCitizen = document.getElementById('res-citizen-after-img');
 
-    if (titleEl) titleEl.textContent = data.title || data.description.substring(0, 70);
-    if (idEl) idEl.textContent = `#${data.id}`;
-    if (descEl) descEl.textContent = data.description;
+    if (titleEl) titleEl.textContent = data.title || (data.description ? String(data.description).substring(0, 70) : 'Civic Grievance');
+    if (idEl) idEl.textContent = Utils.formatComplaintId ? Utils.formatComplaintId(data) : `#${data.public_id || data.id}`;
+    if (descEl) descEl.textContent = data.description || '';
 
     if (beforeImg && data.photo_url) {
       beforeImg.src = data.photo_url;

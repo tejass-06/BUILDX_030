@@ -169,15 +169,15 @@
         document.getElementById('oc-loading').style.display = 'none';
         document.getElementById('oc-content').style.display = 'block';
 
-        const displayId = data.public_id || (data.id ? `NS-${data.id}` : id);
-        document.getElementById('oc-id').textContent = `#${displayId}`;
-        document.getElementById('oc-title').textContent = data.title || data.description.substring(0, 70);
+        const displayId = Utils.formatComplaintId ? Utils.formatComplaintId(data) : (data.public_id || (data.id ? `NS-${data.id}` : id));
+        document.getElementById('oc-id').textContent = displayId.startsWith('#') ? displayId : `#${displayId}`;
+        document.getElementById('oc-title').textContent = data.title || (data.description ? String(data.description).substring(0, 70) : 'Civic Grievance');
         document.getElementById('oc-date').textContent = Utils.formatDate(data.created_at);
-        document.getElementById('oc-citizen-name').textContent = data.citizen_name || 'Citizen';
-        document.getElementById('oc-citizen-phone').textContent = data.citizen_phone || 'N/A';
-        document.getElementById('oc-description').textContent = data.description;
+        document.getElementById('oc-citizen-name').textContent = data.citizen_name || (data.citizen ? data.citizen.name : 'Citizen');
+        document.getElementById('oc-citizen-phone').textContent = data.citizen_phone || (data.citizen ? data.citizen.phone : 'N/A');
+        document.getElementById('oc-description').textContent = data.description || '';
         document.getElementById('oc-location-text').textContent = data.address || data.zone || 'Nagpur';
-        document.getElementById('oc-current-status-text').textContent = data.status;
+        document.getElementById('oc-current-status-text').textContent = data.status || 'SUBMITTED';
 
         const badgeContainer = document.getElementById('oc-status-badges');
         badgeContainer.innerHTML = `

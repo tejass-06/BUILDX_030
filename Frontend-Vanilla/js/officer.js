@@ -143,23 +143,23 @@ const OfficerDashboard = {
     let filtered = [...this.complaints];
 
     if (this.filters.status) {
-      filtered = filtered.filter(c => (c.status || '').toUpperCase() === this.filters.status.toUpperCase());
+      filtered = filtered.filter(c => String(c.status || '').toUpperCase() === this.filters.status.toUpperCase());
     }
 
     if (this.filters.priority) {
-      filtered = filtered.filter(c => (c.priority || '').toUpperCase() === this.filters.priority.toUpperCase());
+      filtered = filtered.filter(c => String(c.priority || '').toUpperCase() === this.filters.priority.toUpperCase());
     }
 
     if (this.filters.zone) {
-      filtered = filtered.filter(c => (c.zone || c.address || '').toLowerCase().includes(this.filters.zone.toLowerCase()));
+      filtered = filtered.filter(c => String(c.zone || c.address || '').toLowerCase().includes(this.filters.zone.toLowerCase()));
     }
 
     if (this.filters.search) {
       filtered = filtered.filter(c =>
-        (c.id || '').toLowerCase().includes(this.filters.search) ||
-        (c.title || '').toLowerCase().includes(this.filters.search) ||
-        (c.description || '').toLowerCase().includes(this.filters.search) ||
-        (c.address || '').toLowerCase().includes(this.filters.search)
+        String(c.public_id || c.id || '').toLowerCase().includes(this.filters.search) ||
+        String(c.title || '').toLowerCase().includes(this.filters.search) ||
+        String(c.description || '').toLowerCase().includes(this.filters.search) ||
+        String(c.address || '').toLowerCase().includes(this.filters.search)
       );
     }
 
@@ -174,37 +174,44 @@ const OfficerDashboard = {
       return;
     }
 
-    tbody.innerHTML = filtered.map(c => `
-      <tr style="cursor: pointer;" onclick="window.location.href='officer-complaint.html?id=${encodeURIComponent(c.id)}'">
-        <td style="font-family: monospace; font-weight: 700; color: var(--primary-color);">
-          #${c.id.substring(0, 8)}
-        </td>
-        <td>
-          <div style="font-weight: 600; color: #1e293b; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            ${Utils.escapeHtml(c.title || c.description)}
-          </div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">
-            ${Utils.escapeHtml(c.address || c.zone || 'Nagpur')}
-          </div>
-        </td>
-        <td>${Utils.getCategoryBadge(c.category)}</td>
-        <td>${Utils.getPriorityBadge(c.priority)}</td>
-        <td>${Utils.getStatusBadge(c.status)}</td>
-        <td>${Utils.getSlaBadge(c.sla_deadline, c.status)}</td>
-        <td onclick="event.stopPropagation();">
-          <div style="display: flex; gap: 6px;">
-            <a href="officer-complaint.html?id=${encodeURIComponent(c.id)}" class="btn btn-sm btn-secondary" title="Open Workspace">
-              <i data-lucide="external-link"></i>
-            </a>
-            ${c.status !== 'RESOLVED' && c.status !== 'CLOSED' ? `
-              <a href="resolution.html?id=${encodeURIComponent(c.id)}&role=officer" class="btn btn-sm btn-success" title="Mark Resolved">
-                <i data-lucide="check"></i>
+    tbody.innerHTML = filtered.map(c => {
+      const targetId = c.public_id || c.id;
+      const formattedDisplayId = Utils.formatComplaintId ? Utils.formatComplaintId(c) : `#${c.public_id || c.id}`;
+      const titleText = c.title || (c.description ? String(c.description).substring(0, 60) : 'Civic Grievance');
+      const addressText = c.address || c.zone || 'Nagpur';
+
+      return `
+        <tr style="cursor: pointer;" onclick="window.location.href='officer-complaint.html?id=${encodeURIComponent(targetId)}'">
+          <td style="font-family: monospace; font-weight: 700; color: var(--primary-color);">
+            ${Utils.escapeHtml(formattedDisplayId)}
+          </td>
+          <td>
+            <div style="font-weight: 600; color: #1e293b; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              ${Utils.escapeHtml(titleText)}
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">
+              ${Utils.escapeHtml(addressText)}
+            </div>
+          </td>
+          <td>${Utils.getCategoryBadge(c.category)}</td>
+          <td>${Utils.getPriorityBadge(c.priority)}</td>
+          <td>${Utils.getStatusBadge(c.status)}</td>
+          <td>${Utils.getSlaBadge(c.sla_deadline, c.status)}</td>
+          <td onclick="event.stopPropagation();">
+            <div style="display: flex; gap: 6px;">
+              <a href="officer-complaint.html?id=${encodeURIComponent(targetId)}" class="btn btn-sm btn-secondary" title="Open Workspace">
+                <i data-lucide="external-link"></i>
               </a>
-            ` : ''}
-          </div>
-        </td>
-      </tr>
-    `).join('');
+              ${c.status !== 'RESOLVED' && c.status !== 'CLOSED' ? `
+                <a href="resolution.html?id=${encodeURIComponent(targetId)}&role=officer" class="btn btn-sm btn-success" title="Mark Resolved">
+                  <i data-lucide="check"></i>
+                </a>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
 
     if (window.lucide) lucide.createIcons();
   }

@@ -17,6 +17,28 @@ const Utils = {
       .replace(/'/g, '&#039;');
   },
 
+  safeString(val, fallback = '') {
+    if (val === null || val === undefined) return fallback;
+    return String(val);
+  },
+
+  formatComplaintId(complaintOrId) {
+    if (complaintOrId === null || complaintOrId === undefined) return '—';
+    if (typeof complaintOrId === 'object') {
+      if (complaintOrId.public_id) return String(complaintOrId.public_id);
+      if (complaintOrId.complaint_id) return String(complaintOrId.complaint_id);
+      if (complaintOrId.id != null) {
+        const idStr = String(complaintOrId.id);
+        return idStr.startsWith('NS-') ? idStr : (idStr.length > 8 ? '#' + idStr.substring(0, 8) : '#' + idStr);
+      }
+      return '—';
+    }
+    const val = String(complaintOrId);
+    if (!val || val === 'undefined' || val === 'null') return '—';
+    if (val.startsWith('NS-')) return val;
+    return val.length > 8 ? '#' + val.substring(0, 8) : '#' + val;
+  },
+
   // =========================================================================
   // CATEGORY BADGE HELPER
   // =========================================================================
@@ -238,11 +260,12 @@ const Utils = {
   generateWhatsAppUrl(complaint) {
     if (!complaint) return 'https://wa.me/';
     const id = complaint.public_id || complaint.id || '';
-    const title = complaint.title || complaint.description || 'Civic Issue';
+    const formattedId = this.formatComplaintId(complaint);
+    const title = complaint.title || (complaint.description ? String(complaint.description).substring(0, 50) : 'Civic Issue');
     const status = complaint.status || 'SUBMITTED';
     const location = complaint.address || complaint.zone || 'Nagpur';
 
-    const message = `*NagarSaathi Civic Update*\nTicket ID: #${id.substring(0, 8)}\nProblem: ${title}\nStatus: ${status}\nLocation: ${location}\nTrack Live: ${window.location.origin}/tracking.html?id=${id}`;
+    const message = `*NagarSaathi Civic Update*\nTicket ID: ${formattedId}\nProblem: ${title}\nStatus: ${status}\nLocation: ${location}\nTrack Live: ${window.location.origin}/tracking.html?id=${encodeURIComponent(id)}`;
     return `https://wa.me/?text=${encodeURIComponent(message)}`;
   },
 

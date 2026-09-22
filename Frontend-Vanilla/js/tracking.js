@@ -102,7 +102,7 @@ const TrackingController = {
 
     const currentStatusIndex = this.getStatusIndex(data.status);
     const whatsappUrl = Utils.generateWhatsAppUrl(data);
-    const displayId = data.public_id || (data.id ? `NS-${data.id}` : id);
+    const displayId = Utils.formatComplaintId ? Utils.formatComplaintId(data) : (data.public_id || (data.id ? `NS-${data.id}` : id));
     const deptName = data.department ? (typeof data.department === 'object' ? data.department.name : data.department) : (data.department_code || 'NMC Public Works');
 
     container.innerHTML = `
@@ -111,7 +111,7 @@ const TrackingController = {
           <div>
             <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">GRIEVANCE TICKET</div>
             <h2 style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin: 2px 0;">
-              ${Utils.escapeHtml(data.title || data.description.substring(0, 60))}
+              ${Utils.escapeHtml(data.title || (data.description ? String(data.description).substring(0, 60) : 'Civic Grievance'))}
             </h2>
             <div style="font-family: monospace; font-size: 0.9rem; font-weight: 700; color: var(--primary-color);">
               Complaint ID: ${Utils.escapeHtml(displayId)}

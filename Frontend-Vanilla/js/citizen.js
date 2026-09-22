@@ -100,30 +100,37 @@ const CitizenHome = {
         return;
       }
 
-      listContainer.innerHTML = items.map(c => `
-        <div class="card card-hover" style="cursor: pointer;" onclick="window.location.href='tracking.html?id=${encodeURIComponent(c.id)}'">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-            <span style="font-family: monospace; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
-              #${c.id.substring(0, 8)}
-            </span>
-            ${Utils.getStatusBadge(c.status)}
+      listContainer.innerHTML = items.map(c => {
+        const targetId = c.public_id || c.id;
+        const formattedDisplayId = Utils.formatComplaintId ? Utils.formatComplaintId(c) : `#${c.public_id || c.id}`;
+        const titleText = c.title || (c.description ? String(c.description).substring(0, 60) : 'Civic Grievance');
+        const addressText = c.address || c.zone || 'Nagpur';
+
+        return `
+          <div class="card card-hover" style="cursor: pointer;" onclick="window.location.href='tracking.html?id=${encodeURIComponent(targetId)}'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <span style="font-family: monospace; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">
+                ${Utils.escapeHtml(formattedDisplayId)}
+              </span>
+              ${Utils.getStatusBadge(c.status)}
+            </div>
+            <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
+              ${Utils.escapeHtml(titleText)}
+            </h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+              ${Utils.getCategoryBadge(c.category)}
+              ${Utils.getPriorityBadge(c.priority)}
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
+                ${Utils.escapeHtml(addressText)}
+              </span>
+              <span>${Utils.formatDate(c.created_at)}</span>
+            </div>
           </div>
-          <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: #1e293b;">
-            ${Utils.escapeHtml(c.title || c.description.substring(0, 60))}
-          </h4>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-            ${Utils.getCategoryBadge(c.category)}
-            ${Utils.getPriorityBadge(c.priority)}
-          </div>
-          <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 8px;">
-            <span style="display: flex; align-items: center; gap: 4px;">
-              <i data-lucide="map-pin" style="width: 14px; height: 14px;"></i>
-              ${Utils.escapeHtml(c.address || c.zone || 'Nagpur')}
-            </span>
-            <span>${Utils.formatDate(c.created_at)}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
       if (window.lucide) lucide.createIcons();
     } catch (e) {
