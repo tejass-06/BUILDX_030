@@ -72,6 +72,22 @@ export interface TranslationDictionary {
 
   complaintSubmittedTitle: string;
   viewComplaintBtn: string;
+
+  // Phase 4
+  complaintStatusLabel: string;
+  assignedLabel: string;
+  inProgressStatusLabel: string;
+  resolvedStatusLabel: string;
+  awaitingVerificationLabel: string;
+  wasProblemFixedHeading: string;
+  issueResolvedBtn: string;
+  notFixedBtn: string;
+  reopenComplaintBtn: string;
+  thanksForConfirming: string;
+  resolutionEvidenceTitle: string;
+  reopenReasonPrompt: string;
+  officerAssignedLabel: string;
+  slaRemainingLabel: string;
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -155,6 +171,22 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
 
     complaintSubmittedTitle: 'Complaint Submitted Successfully',
     viewComplaintBtn: 'View Complaint',
+
+    // Phase 4
+    complaintStatusLabel: 'Complaint Status',
+    assignedLabel: 'Assigned',
+    inProgressStatusLabel: 'In Progress',
+    resolvedStatusLabel: 'Resolved',
+    awaitingVerificationLabel: 'Awaiting Citizen Verification',
+    wasProblemFixedHeading: 'Was this problem fixed?',
+    issueResolvedBtn: 'Issue Resolved',
+    notFixedBtn: 'Not Fixed — Reopen',
+    reopenComplaintBtn: 'Reopen Complaint',
+    thanksForConfirming: 'Thanks for confirming the resolution.',
+    resolutionEvidenceTitle: 'Resolution Evidence',
+    reopenReasonPrompt: 'What still needs attention?',
+    officerAssignedLabel: 'Assigned Officer',
+    slaRemainingLabel: '19h remaining',
   },
   mr: {
     tagline: 'हुशार नागरिक. स्वच्छ शहर. सुंदर नागपूर.',
@@ -236,6 +268,22 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
 
     complaintSubmittedTitle: 'तक्रार यशस्वीरित्या नोंदवली गेली',
     viewComplaintBtn: 'तक्रार पहा',
+
+    // Phase 4
+    complaintStatusLabel: 'तक्रारीची स्थिती',
+    assignedLabel: 'नियुक्त',
+    inProgressStatusLabel: 'प्रगतीपथावर',
+    resolvedStatusLabel: 'निवारण झाले',
+    awaitingVerificationLabel: 'नागरिक पडताळणी प्रलंबित',
+    wasProblemFixedHeading: 'ही समस्या दूर झाली का?',
+    issueResolvedBtn: 'समस्या सुटली',
+    notFixedBtn: 'दुरुस्त झाले नाही — पुन्हा उघडा',
+    reopenComplaintBtn: 'तक्रार पुन्हा उघडा',
+    thanksForConfirming: 'निवारणाची खात्री केल्याबद्दल धन्यवाद.',
+    resolutionEvidenceTitle: 'निवारणाचा पुरावा',
+    reopenReasonPrompt: 'अजून काय दुरुस्ती आवश्यक आहे?',
+    officerAssignedLabel: 'नियुक्त अधिकारी',
+    slaRemainingLabel: '१९ तास शिल्लक',
   },
   hi: {
     tagline: 'स्मार्ट नागरिक. स्वच्छ शहर. बेहतर नागपुर.',
@@ -317,5 +365,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
 
     complaintSubmittedTitle: 'शिकायत सफलतापूर्वक दर्ज हुई',
     viewComplaintBtn: 'शिकायत देखें',
+
+    // Phase 4
+    complaintStatusLabel: 'शिकायत की स्थिति',
+    assignedLabel: 'नियुक्त',
+    inProgressStatusLabel: 'प्रगति पर',
+    resolvedStatusLabel: 'समाधान हुआ',
+    awaitingVerificationLabel: 'नागरिक सत्यापन लंबित',
+    wasProblemFixedHeading: 'क्या यह समस्या हल हो गई?',
+    issueResolvedBtn: 'समस्या हल हुई',
+    notFixedBtn: 'ठीक नहीं हुआ — दोबारा खोलें',
+    reopenComplaintBtn: 'शिकायत फिर से खोलें',
+    thanksForConfirming: 'समाधान की पुष्टि करने के लिए धन्यवाद।',
+    resolutionEvidenceTitle: 'समाधान का साक्ष्य',
+    reopenReasonPrompt: 'अभी क्या ध्यान देने की आवश्यकता है?',
+    officerAssignedLabel: 'नियुक्त अधिकारी',
+    slaRemainingLabel: '१९ घंटे शेष',
   },
 };

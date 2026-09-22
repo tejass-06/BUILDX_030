@@ -13,6 +13,7 @@ export type ComplaintStatus =
   | 'resolved'           // Officer uploaded resolution evidence
   | 'ai_verified'        // Vision AI verified before-after work
   | 'citizen_confirmed'  // Citizen gave positive resolution feedback
+  | 'closed'             // Complaint closed by citizen
   | 'reopened';          // Citizen rejected resolution
 
 export type ComplaintPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -110,6 +111,8 @@ export interface Complaint {
   aiAnalysis?: AIAnalysisData;
   duplicateCluster?: DuplicateClusterData;
   resolutionEvidence?: ResolutionEvidenceData;
+  reopenReason?: string;
+  citizenRating?: number;
   photoUrls: string[];
   createdAt: string;
   updatedAt: string;

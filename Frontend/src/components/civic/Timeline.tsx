@@ -3,7 +3,7 @@ import { Check, Clock, AlertCircle } from 'lucide-react';
 import { ComplaintStatus } from '../../types';
 
 export interface TimelineStep {
-  key: ComplaintStatus | 'reported' | 'assigned' | 'in_progress' | 'resolved' | 'verified';
+  key: ComplaintStatus | 'closed';
   label: string;
   description?: string;
   timestamp?: string;
@@ -16,12 +16,11 @@ export interface TimelineProps {
 }
 
 const defaultWorkflowSteps: { key: ComplaintStatus; label: string; desc: string }[] = [
-  { key: 'submitted', label: 'Report Submitted', desc: 'Received and registered' },
-  { key: 'ai_analyzed', label: 'AI Intelligence', desc: 'Understood & duplicate checked' },
-  { key: 'assigned', label: 'Officer Assigned', desc: 'Routed to competent authority' },
-  { key: 'in_progress', label: 'Work In Progress', desc: 'Field inspection & repair underway' },
-  { key: 'resolved', label: 'Resolution Uploaded', desc: 'Officer evidence submitted' },
-  { key: 'citizen_confirmed', label: 'Citizen Confirmed', desc: 'Verified & closed' },
+  { key: 'submitted', label: 'Submitted', desc: 'Complaint received & registered' },
+  { key: 'assigned', label: 'Assigned', desc: 'Assigned to Orange City Water' },
+  { key: 'in_progress', label: 'In Progress', desc: 'Field team working on reported pipeline issue' },
+  { key: 'resolved', label: 'Resolution', desc: 'Awaiting officer completion' },
+  { key: 'closed', label: 'Citizen Verification', desc: 'Verified & closed' },
 ];
 
 const statusOrder: ComplaintStatus[] = [
@@ -32,21 +31,40 @@ const statusOrder: ComplaintStatus[] = [
   'resolved',
   'ai_verified',
   'citizen_confirmed',
+  'closed',
 ];
 
 export const Timeline: React.FC<TimelineProps> = ({
   currentStatus,
+  customSteps,
   className = '',
 }) => {
+  const stepsToRender = customSteps || defaultWorkflowSteps;
   const currentIndex = statusOrder.indexOf(currentStatus);
   const isReopened = currentStatus === 'reopened';
 
   return (
     <div className={`ns-timeline ${className}`} role="list" aria-label="Complaint progress timeline">
-      {defaultWorkflowSteps.map((step, idx) => {
-        const stepTargetIndex = statusOrder.indexOf(step.key);
-        const isCompleted = !isReopened && currentIndex > stepTargetIndex;
-        const isCurrent = !isReopened && (currentIndex === stepTargetIndex || (step.key === 'resolved' && currentStatus === 'ai_verified'));
+      {stepsToRender.map((step, idx) => {
+        const stepTargetIndex = statusOrder.indexOf(step.key as ComplaintStatus);
+        const isCompleted = !isReopened && (
+          currentIndex > stepTargetIndex ||
+          (step.key === 'resolved' && (currentStatus === 'closed' || currentStatus === 'citizen_confirmed')) ||
+          (step.key === 'closed' && (currentStatus === 'closed' || currentStatus === 'citizen_confirmed'))
+        );
+        const isCurrent = !isReopened && (
+          currentIndex === stepTargetIndex ||
+          (step.key === 'resolved' && (currentStatus === 'resolved' || currentStatus === 'ai_verified')) ||
+          (step.key === 'closed' && (currentStatus === 'closed' || currentStatus === 'citizen_confirmed'))
+        );
+
+        let descText = 'desc' in step ? (step as any).desc : step.description;
+        if (step.key === 'resolved' && (currentStatus === 'resolved' || currentStatus === 'closed')) {
+          descText = 'Field repair completed & verified';
+        }
+        if (step.key === 'closed' && currentStatus === 'resolved') {
+          descText = 'Awaiting citizen verification';
+        }
 
         let stepStateClass = 'ns-timeline__step--pending';
         if (isCompleted) stepStateClass = 'ns-timeline__step--completed';
@@ -74,7 +92,7 @@ export const Timeline: React.FC<TimelineProps> = ({
 
             <div className="ns-timeline__content">
               <p className="ns-timeline__title">{step.label}</p>
-              <p className="ns-timeline__desc text-muted">{step.desc}</p>
+              <p className="ns-timeline__desc text-muted">{descText}</p>
             </div>
           </div>
         );

@@ -8,6 +8,7 @@ import {
   DepartmentConflictData,
   SupportedLanguage,
   ReportDraft,
+  ResolutionEvidenceData,
 } from '../types';
 import {
   mockComplaints,
@@ -61,6 +62,9 @@ interface ComplaintContextType {
   reportSeparately: () => string;
   getComplaintById: (id: string) => Complaint | undefined;
   updateComplaintStatus: (id: string, status: ComplaintStatus) => void;
+  updateResolutionEvidence: (id: string, evidence: Partial<ResolutionEvidenceData>) => void;
+  closeComplaint: (id: string, rating?: number) => void;
+  reopenComplaint: (id: string, reason: string) => void;
   assignComplaint: (id: string, officerId: string, departmentCode: string) => void;
   addComplaint: (complaint: Omit<Complaint, 'id' | 'createdAt' | 'updatedAt'>) => string;
 }
@@ -170,6 +174,60 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
     );
   };
 
+  const updateResolutionEvidence = (id: string, evidence: Partial<ResolutionEvidenceData>) => {
+    setComplaints((prev) =>
+      prev.map((item) => {
+        if (item.id.toLowerCase() === id.toLowerCase()) {
+          const currentEvidence = item.resolutionEvidence || {
+            officerNotes: 'Pipeline joint repaired and affected road section cleared.',
+            resolvedAt: new Date().toISOString(),
+          };
+          return {
+            ...item,
+            status: 'resolved',
+            resolutionEvidence: {
+              ...currentEvidence,
+              ...evidence,
+              resolvedAt: evidence.resolvedAt || new Date().toISOString(),
+            },
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  const closeComplaint = (id: string, rating?: number) => {
+    setComplaints((prev) =>
+      prev.map((item) =>
+        item.id.toLowerCase() === id.toLowerCase()
+          ? {
+              ...item,
+              status: 'closed',
+              citizenRating: rating ?? 5,
+              updatedAt: new Date().toISOString(),
+            }
+          : item
+      )
+    );
+  };
+
+  const reopenComplaint = (id: string, reason: string) => {
+    setComplaints((prev) =>
+      prev.map((item) =>
+        item.id.toLowerCase() === id.toLowerCase()
+          ? {
+              ...item,
+              status: 'reopened',
+              reopenReason: reason,
+              updatedAt: new Date().toISOString(),
+            }
+          : item
+      )
+    );
+  };
+
   const assignComplaint = (id: string, officerId: string, departmentCode: string) => {
     const officer = officers.find((o) => o.id === officerId);
     const dept = departments.find((d) => d.code === departmentCode);
@@ -220,6 +278,9 @@ export const ComplaintProvider: React.FC<{ children: ReactNode }> = ({ children 
         reportSeparately,
         getComplaintById,
         updateComplaintStatus,
+        updateResolutionEvidence,
+        closeComplaint,
+        reopenComplaint,
         assignComplaint,
         addComplaint,
       }}

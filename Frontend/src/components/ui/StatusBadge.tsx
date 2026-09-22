@@ -72,6 +72,11 @@ const statusConfigMap: Record<StatusType, StatusConfig> = {
     themeClass: 'success',
     icon: <UserCheck size={12} aria-hidden="true" />,
   },
+  closed: {
+    label: 'Closed',
+    themeClass: 'success',
+    icon: <CheckCircle2 size={12} aria-hidden="true" />,
+  },
   reopened: {
     label: 'Reopened',
     themeClass: 'error',
